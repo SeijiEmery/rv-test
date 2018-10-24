@@ -44,20 +44,24 @@ I am taking / would appreciate pull requests to add more testcases so we can rea
 
 Tests are loaded from all the source files in `tests/*.test.s` and parsed to extract the assembly code and metadata (ie. register input / output values) for each test function.
 
-Assembly for each test case is written into a separate files in the `generated/` directory, and then assembled using `riscv-as` and dumped using `od -t x1`. 
+Assembly for each test case is written into a separate files in the `generated/` directory, then assembled using `riscv-as`, extracted with `riscv-objcopy -O binary --only-section=.text`, and dumped to hex with `od -t x1`. 
 
 "Script" files are also generated, which are just input commands piped into your riscv executable, and a shell file is generated, `generated/run.sh` that runs + diffs all this stuff, with testrun outputs written to `results/`.
 
 Lastly, the `run_tests.py` script checks all diffs and prints out which test cases passed (no diff) / failed (diff between the output and a generated .expected file). Currently this last part is TBD.
 
+Many thanks to Samuel Armold for helping me figure out how some of the more annoying parts work.
+
 ## Dependencies
 
-You must have the risc-v toolchain installed, and the risc-v assembler command aliased / linked to as `riscv-as`. Alternatively, use the `--with-as` flag (TBD).
+You must have the risc-v toolchain installed, and the risc-v assembler and objcopy commands aliased / linked to as `riscv-as` and `riscv-objcopy`. Alternatively, use the `--with-as` flag (TBD).
 
 <https://github.com/riscv/riscv-tools>
 
 If you're on osx install this through brew:
+
 <https://github.com/riscv/homebrew-riscv>
+
 <https://brew.sh>
 
 Also, I would strongly recommend getting <https://github.com/joh/when-changed>
