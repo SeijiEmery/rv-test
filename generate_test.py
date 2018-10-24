@@ -4,10 +4,7 @@ import os
 import re
 
 test_begin_regex = re.compile(r'test\s*(?:"([^"]*)")?\s*{{\s*\n')
-test_end_regex = re.compile(r'}}')
-test_inputs_regex = re.compile(r'inputs\s*{{([^}]+)}}')
-test_outputs_regex = re.compile(r'outputs\s*{{([^}]+)}}')
-
+test_stmt_regex = re.compile(r'\s*(?:(inputs|outputs)\s*{{([^}]+)}}|(}}))\s*')
 
 def count_lines (s):
     return len(list(re.finditer(r'\n', s)))
@@ -21,7 +18,45 @@ def process_test_file (filepath):
 
     def parse_testcases (lines, line_num = 0):
         # Try matching all statements:
-        begin_stmts = list(re.finditer(test_begin_regex, lines))
+        matches = list(re.finditer(test_begin_regex, lines))
+        testcases = [
+            (matches[i].group(1), 
+                lines [
+                    matches[i].end() : 
+                    (matches[i+1].start() if i + 1 < len(matches) else -1)
+                ],
+                matches[i].end())
+            for i in range(len(matches))
+        ]
+        for name, body, start_index in testcases:
+            input_stmts  = ''
+            output_stmts = ''
+            def parse_stmt (match):
+                nonlocal input_stmts, output_stmts
+                print(match)
+                if match.group(1) == 'inputs':
+                    input_stmts += match.group(2) + '\n'
+                elif match.group(1) == 'outputs':
+                    output_stmts += match.group(2) + '\n'
+                return ''
+            body = re.sub(test_stmt_regex, parse_stmt, body)
+            input_stmts = input_stmts.strip()
+            output_stmts = output_stmts.strip()
+
+            print("test '%s', start_index = %s"%(name, start_index))
+            print("body = '''\n%s'''"%body)
+            print("inputs = '''%s'''"%input_stmts)
+            print("outputs = '''%s'''"%output_stmts)
+        return
+
+
+
+
+
+
+
+
+
         input_stmts = list(re.finditer(test_inputs_regex, lines))
         output_stmts = list(re.finditer(test_outputs_regex, lines))
 
