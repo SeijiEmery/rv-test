@@ -13,6 +13,7 @@ To install:
 To run:
 	
 	./run_tests.py <path-to-your-risc-v-executable>
+	cat results/*.diff
 	
 To clean:
 
