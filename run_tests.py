@@ -155,7 +155,7 @@ def generate_files_from_directory (dir_path, target_dir, results_dir, risc_v_exe
         ))
 
     shell_code = ''.join([
-        "rm -f %s && cat %s | %s | sed 's/^\(RISCV> \)*//' > %s && diff %s %s > %s && cat %s\n"%(
+        "rm -f %s && cat %s | %s | sed 's/^\(RISCV[^>]*> \)*//' > %s && diff %s %s > %s && cat %s\n"%(
             out,
             script, risc_v_exe, out,
             out, expected, diff,
