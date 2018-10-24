@@ -110,14 +110,10 @@ def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', riscv_objcop
                     for reg, _ in outputs.items()
                 ])
             ))
-            expected_output = unindent('''
-                %s
-            '''%(
-                '\n'.join([
-                    'X%d = %d'%(REGISTER_MAPPINGS[reg], value)
-                    for reg, value in outputs.items()
-                ])
-            ))
+            expected_output = '\n'.join([
+                'R%d = %d'%(REGISTER_MAPPINGS[reg], value)
+                for reg, value in outputs.items()
+            ]) + '\n'
 
             # Write generated files
             write_file(path('s'), body)
@@ -135,7 +131,7 @@ def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', riscv_objcop
                 path('script'), 
                 path('lastrun.txt'), 
                 path('expected.txt'), 
-                os.path.join(results_dir, base_name + '.diff')
+                os.path.join(results_dir, '%s.%d.diff'%(base_name, i))
             ))
     return generate
 
@@ -159,7 +155,7 @@ def generate_files_from_directory (dir_path, target_dir, results_dir, risc_v_exe
         ))
 
     shell_code = ''.join([
-        "rm -f %s && cat %s | %s > %s && diff %s %s > %s\n"%(
+        "rm -f %s && cat %s | %s | sed 's/^\(RISCV> \)*//' > %s && diff %s %s > %s\n"%(
             out,
             script, risc_v_exe, out,
             out, expected, diff)
@@ -193,6 +189,11 @@ def run (risc_v_exe):
     print(shell_file)
     print(results_dir)
     subprocess.call([ 'bash', shell_file ])
+
+    for file in os.listdir('results'):
+        subprocess.call([ 'echo', file ])
+        subprocess.call([ 'cat', os.path.join('results', file) ])
+
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
