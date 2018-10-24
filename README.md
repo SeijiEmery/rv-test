@@ -28,7 +28,7 @@ Note: this last mode means that the program will just use when-changed to re-run
 
 Test files are all of the files in tests/ and have a .test.s extension.
 
-The format of these files is fairly simple: they consist of sequences of testcases that consist of risc-v assembly 
+The format of these files is fairly simple: they consist of sequences of testcases that consist of risc-v assembly and a small DSL.
 
 	test [optional name] {{
 		inputs {{ register-starting-values-here }}
@@ -54,6 +54,10 @@ Lastly, the `run_tests.py` script checks all diffs and prints out which test cas
 
 You must have the risc-v toolchain installed, and the risc-v assembler command aliased / linked to as `riscv-as`. Alternatively, use the `--with-as` flag (TBD).
 
-<https://github.com/riscv/riscv-gnu-toolchain>
+<https://github.com/riscv/riscv-tools>
+
+If you're on osx install this through brew:
+<https://github.com/riscv/homebrew-riscv>
+<https://brew.sh>
 
 Also, I would strongly recommend getting <https://github.com/joh/when-changed>
