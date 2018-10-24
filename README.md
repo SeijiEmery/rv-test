@@ -24,6 +24,8 @@ To run interactively:
 	
 Note: this last mode means that the program will just use when-changed to re-run itself whenever any of the source files in tests/ are changed. You need to have when-changed - get it here: <https://github.com/joh/when-changed>
 
+Note 2: do not use this command as it currently is extremely broken.
+
 ## Test files
 
 Test files are all of the files in tests/ and have a .test.s extension.
