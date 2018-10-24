@@ -50,11 +50,9 @@ Assembly for each test case is written into a separate files in the `generated/`
 
 Lastly, the `run_tests.py` script checks all diffs and prints out which test cases passed (no diff) / failed (diff between the output and a generated .expected file). Currently this last part is TBD.
 
-Many thanks to Samuel Armold for helping me figure out how some of the more annoying parts work.
-
 ## Dependencies
 
-You must have the risc-v toolchain installed, and the risc-v assembler and objcopy commands aliased / linked to as `riscv-as` and `riscv-objcopy`. Alternatively, use the `--with-as` flag (TBD).
+You must have the risc-v toolchain installed, and the risc-v assembler and objcopy commands aliased / linked to as `riscv-as` and `riscv-objcopy`. Alternatively, use the `--with-as` and `--with-objcopy` flags (TBD).
 
 <https://github.com/riscv/riscv-tools>
 
@@ -65,3 +63,7 @@ If you're on osx install this through brew:
 <https://brew.sh>
 
 Also, I would strongly recommend getting <https://github.com/joh/when-changed>
+
+## Credits
+
+Many thanks to Samuel Armold for his help in figuring out how some of the more annoying parts of this should work.
