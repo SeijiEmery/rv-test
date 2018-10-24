@@ -28,7 +28,7 @@ def process_test_file (filepath):
         def find_non_overlapping_end_stmts ():
             def overlaps (m1, m2):
                 return m1.end() <= m2.end()
-            
+
             input_index, output_index = 0, 0
             for match in re.finditer(test_end_regex, lines):
                 while input_index < len(input_stmts) and input_stmts[input_index].end() < match.start():
@@ -47,6 +47,48 @@ def process_test_file (filepath):
                 # print("Emitting %s"%match)
                 yield match
         end_stmts = list(find_non_overlapping_end_stmts())
+
+        if len(begin_stmts) != len(end_stmts):
+            raise Exception("Mismatched {{ ... }}! in %s"%filepath)
+
+        for match_start in begin_stmts:
+            # Validate end statement
+            if len(end_stmts) == 0 or end_stmts[0].start() > match_start.end():
+                raise Exception("Missing '}}' in testcase at %s:%s!"%(
+                    filepath, count_lines(lines[:match_start.end()])))
+            match_end = end_stmts.pop(0)
+
+            # Validate input statement(s)
+            if len(input_stmts) > 0 and (
+                input_stmts[0].start() < match_start.end() or 
+                input_stmts[0].end() > match_end.start()):
+                raise Exception("Unused input statement (not in a testcase) at %s:%s!"%(
+                    filepath, count_lines(lines[:input_stmts[0].start()])))
+            if len(input_stmts) == 0:
+                raise Exception("No input statements in testcase at %s:%s!"%(
+                    filepath, count_lines(lines[:match_start.end()])))
+
+            # Validate output statement(s)
+            if len(output_stmts) > 0 and (
+                output_stmts[0].start() < match_start.end() or 
+                output_stmts[0].end() > match_end.start()):
+                raise Exception("Unused output statement (not in a testcase) at %s:%s!"%(
+                    filepath, count_lines(lines[:output_stmts[0].start()])))
+            if len(output_stmts) == 0:
+                raise Exception("No output statements in testcase at %s:%s!"%(
+                    filepath, count_lines(lines[:match_start.end()])))
+
+            # Read input + output statements
+            inputs = []
+            while len(input_stmts) > 0 and input_stmts[0].end() <= match_end.start():
+                inputs += input_stmts.pop(0).group(1) + '\n'
+            outputs = ''
+            while len(output_stmts) > 0 and output_stmts[0].end() <= match_end.start():
+                inputs += output_stmts.pop(0).group(1) + '\n'
+
+            print(inputs)
+            print(outputs)
+
 
 
 
