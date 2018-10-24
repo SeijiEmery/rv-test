@@ -2,6 +2,7 @@
 from pathlib import Path
 import os
 import re
+from registers import *
 
 test_begin_regex = re.compile(r'test\s*(?:"([^"]*)")?\s*{{\s*\n')
 test_stmt_regex = re.compile(r'\s*(?:(inputs|outputs)\s*{{([^}]+)}}|(}}))\s*')
@@ -10,6 +11,9 @@ register_assignment_expr_regex = re.compile(r'([a-z][a-z0-9]*)\s+(\-?[0-9]+)')
 def parse_register_assignment (statements, register_dict):
     def parse_and_execute_assignment (match):
         name, value = match.group(1, 2)
+        if name not in REGISTER_MAPPINGS:
+            raise Exception("Invalid register name: '%s'"%name)
+
         value = int(value)
         if name in register_dict:
             raise Exception("Already defined '%s' = %d; attempting to override with %d!"%(
@@ -28,7 +32,7 @@ def parse_register_assignment (statements, register_dict):
 def count_lines (s):
     return len(list(re.finditer(r'\n', s)))
 
-def process_test_file (filepath):
+def parse_test_file (filepath):
     path = Path(filepath)
     if not path.is_file():
         raise Exception("Cannot load '%s' (file does not exist)"%filepath)
@@ -73,4 +77,4 @@ def process_test_file (filepath):
 
 if __name__ == '__main__':
     filepath = 'tests/add.test.s'
-    process_test_file(filepath)
+    parse_test_file(filepath)
