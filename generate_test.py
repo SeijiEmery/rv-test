@@ -20,11 +20,38 @@ def process_test_file (filepath):
         lines = f.read()
 
     def parse_testcases (lines, line_num = 0):
+        # pre-search + replace all test input + test output cases
+        # since parsing is done w/ regexes, this is the only, uh...
+        # sane way to do this (can't parse recursive '{{ ... }}'
+        # statements, but by parsing + removing the inner ones first,
+        # a 2-depth nesting is possible)
+
+        # Store parsed input + output statements as in-order lists of
+        # match objects
+        input_stmts  = []
+        output_stmts = []
+
+        def process_input (match):
+            input_stmts.append(match)
+            return ''
+
+        def process_output (match):
+            output_stmts.append(match)
+            return ''
+
+        lines = re.sub(test_inputs_regex, process_input, lines)
+        lines = re.sub(test_outputs_regex, process_output, lines)
+
+        print("got %s input statements: %s"%(
+            len(input_stmts), ', '.join(map(str, input_stmts))))
+        print("got %s output statements: %s"%(
+            len(output_stmts), ', '.join(map(str, output_stmts))))
+
         while True:
             # Search for begin test statement (test_begin_regex)
             match = re.search(test_begin_regex, lines)
             if not match:
-                print("No match found in '%s'"%lines)
+                print("No match found in '%s'"%lines.strip())
                 return
             test_name = match.group(1)
             line_num += count_lines(lines[:match.end()])
