@@ -2,6 +2,10 @@
 from pathlib import Path
 import os
 import re
+import subprocess
+import itertools
+import sys
+import getopt
 from registers import *
 
 test_begin_regex = re.compile(r'test\s*(?:"([^"]*)")?\s*{{\s*\n')
@@ -82,14 +86,11 @@ def unindent (s):
         for line in s.strip().split('\n')
     ])
 
-def generate_files (target_dir, riscv_as = 'riscv-as', od = 'od'):
+def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', od = 'od'):
     def generate (src_file_path):
         testcases = parse_test_file(src_file_path)
         base_name = os.path.basename(src_file_path).strip('.test.s')
-        print(base_name)
-
         base_path = os.path.join(target_dir, base_name)
-
         for i, name, body, inputs, outputs, iterations in testcases:
             path = lambda fmt: '%s.%d.%s'%(base_path, i, fmt)
             input_script = unindent('''
@@ -120,13 +121,23 @@ def generate_files (target_dir, riscv_as = 'riscv-as', od = 'od'):
 
             # Write generated files
             write_file(path('s'), body)
-            write_file(path('script.txt'), input_script)
+            write_file(path('script'), input_script)
             write_file(path('expected.txt'), expected_output)
 
-
+            # Run assembler + od to generate binary + .hex files
+            subprocess.call('%s %s -o %s'%(
+                riscv_as, path('s'), path('bin')), shell=True)
+            subprocess.call('%s -t x1 %s > %s'%(
+                od, path('bin'), path('hex')), shell=True)
+            yield map(os.path.abspath, (
+                path('script'), 
+                path('lastrun.txt'), 
+                path('expected.txt'), 
+                os.path.join(results_dir, base_name + '.diff')
+            ))
     return generate
 
-def generate_files_from_directory (dir_path, target_dir):
+def generate_files_from_directory (dir_path, target_dir, results_dir, risc_v_exe):
     files = [
         os.path.join(dir_path, filepath)
         for filepath in os.listdir(dir_path)
@@ -135,7 +146,71 @@ def generate_files_from_directory (dir_path, target_dir):
     # Generate target directory if it doesn't exist
     if not os.path.isdir(target_dir):
         os.mkdir(target_dir)
-    return list(map(generate_files(target_dir), files))
+    if not os.path.isdir(results_dir):
+        os.mkdir(results_dir)
+
+    # Generate files for all tests
+    tests = itertools.chain.from_iterable(
+        map(
+            generate_files(target_dir, results_dir), 
+            files
+        ))
+
+    shell_code = ''.join([
+        "rm -f %s && cat %s | %s > %s && diff %s %s > %s\n"%(
+            out,
+            script, risc_v_exe, out,
+            out, expected, diff)
+        for script, out, expected, diff in tests
+    ])
+    run_path = os.path.join(target_dir, 'run.sh')
+    write_file(run_path, shell_code)
+    return map(os.path.abspath, (run_path, results_dir))
+
+def clean_directories (*args):
+    import shutil
+    for path in args:
+        if os.path.isdir(path):
+            shutil.rmtree(path)
+
+def run_interactively (program_name, risc_v_exe, src_dir_path):
+    cmd = 'when-changed %s %s -c clear; python3 %s %s'%(
+        program_name,
+        ' '.join([
+            os.path.join(src_dir_path, filepath)
+            for filepath in os.listdir(src_dir_path)
+            if os.path.isfile(os.path.join(src_dir_path, filepath))
+        ]), program_name, risc_v_exe)
+    print(cmd)
+    subprocess.call(cmd, shell=True, stdout=sys.stdout, stderr=sys.stderr)
+
+def run (risc_v_exe):
+    clean_directories('./generated', './results')
+    shell_file, results_dir = generate_files_from_directory(
+        './tests', './generated', './results', risc_v_exe)
+    print(shell_file)
+    print(results_dir)
+    subprocess.call([ 'bash', shell_file ])
 
 if __name__ == '__main__':
-    generate_files_from_directory('tests', 'generated')
+    if len(sys.argv) < 2:
+        print('usage: %s clean | [-i] <path-to-your-riscv-executable>'%sys.argv[0])
+        sys.exit(-1)
+    if len(sys.argv) == 2 and sys.argv[1] == 'clean':
+        clean_directories('generated', 'results')
+        sys.exit(0)
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], 'i', ['interactive='])
+        # print(opts)
+        # print(args)
+        for opt, arg in opts:
+            if opt in ('-i', 'interactive'):
+                run_interactively(sys.argv[0], args[0], 'tests')
+                sys.exit(0)
+        
+        run(args[0])
+        sys.exit(0)
+
+    except getopt.GetoptError:
+        print('usage: %s clean | [-i] <path-to-your-riscv-executable>')
+        sys.exit(-1)
