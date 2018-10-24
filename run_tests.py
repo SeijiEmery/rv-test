@@ -71,7 +71,7 @@ def parse_test_file (filepath):
             body = '\n'.join([
                 line.strip()
                 for line in body.split('\n')
-            ]) + '\n'
+            ]) + '\nebreak\n'
 
             yield i, name, body, inputs, outputs, 100
     return parse_testcases(lines)
@@ -86,7 +86,7 @@ def unindent (s):
         for line in s.strip().split('\n')
     ])
 
-def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', od = 'od'):
+def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', riscv_objcopy = 'riscv-objcopy', od = 'od'):
     def generate (src_file_path):
         testcases = parse_test_file(src_file_path)
         base_name = os.path.basename(src_file_path).strip('.test.s')
@@ -126,7 +126,9 @@ def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', od = 'od'):
 
             # Run assembler + od to generate binary + .hex files
             subprocess.call('%s %s -o %s'%(
-                riscv_as, path('s'), path('bin')), shell=True)
+                riscv_as, path('s'), path('elf')), shell=True)
+            subprocess.call('%s -O binary --only-section=.text %s %s'%(
+                riscv_objcopy, path('elf'), path('bin')), shell=True)
             subprocess.call('%s -t x1 %s > %s'%(
                 od, path('bin'), path('hex')), shell=True)
             yield map(os.path.abspath, (
