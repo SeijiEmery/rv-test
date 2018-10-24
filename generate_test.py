@@ -49,17 +49,17 @@ def process_test_file (filepath):
 
         while True:
             # Search for begin test statement (test_begin_regex)
-            match = re.search(test_begin_regex, lines)
-            if not match:
+            start_match = re.search(test_begin_regex, lines)
+            if not start_match:
                 print("No match found in '%s'"%lines.strip())
                 return
-            test_name = match.group(1)
-            line_num += count_lines(lines[:match.end()])
-            lines = lines[match.end():]
+            test_name = start_match.group(1)
+            line_num += count_lines(lines[:start_match.end()])
+            lines = lines[start_match.end():]
 
             # Search for end test statement (test_end_regex)
             end_match = re.search(test_end_regex, lines)
-            if not match:
+            if not end_match:
                 raise Exception("Expected '}}' in %s:%s"%(
                     filepath, line_num))
 
@@ -67,6 +67,26 @@ def process_test_file (filepath):
             body = lines[:end_match.start()]
             print("Got match on %s:%s:\n%s\n"%(
                 filepath, line_num, body))
+
+            # find input + output statements that are within this test body
+            inputs = [
+                m.group(1)
+                for m in input_stmts
+                if m.start() >= start_match.end() and m.end() <= end_match.start()
+            ]
+            outputs = [
+                m.group(1)
+                for m in output_stmts
+                if m.start() >= start_match.end() and m.end() <= end_match.start()
+            ]
+            if len(inputs) == 0:
+                raise Exception("Testcase '%s' is missing 'inputs' statement! %s:%s"%(
+                    test_name, filepath, line_num))
+            if len(outputs) == 0:
+                raise Exception("Testcase '%s' is missing 'outputs' statement! %s:%s"%(
+                    test_name, filepath, line_num))
+
+
 
             # Return parsed testcase info
             yield None
