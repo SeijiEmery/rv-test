@@ -155,10 +155,11 @@ def generate_files_from_directory (dir_path, target_dir, results_dir, risc_v_exe
         ))
 
     shell_code = ''.join([
-        "rm -f %s && cat %s | %s | sed 's/^\(RISCV> \)*//' > %s && diff %s %s > %s\n"%(
+        "rm -f %s && cat %s | %s | sed 's/^\(RISCV> \)*//' > %s && diff %s %s > %s && cat %s\n"%(
             out,
             script, risc_v_exe, out,
-            out, expected, diff)
+            out, expected, diff,
+            diff)
         for script, out, expected, diff in tests
     ])
     run_path = os.path.join(target_dir, 'run.sh')
@@ -190,9 +191,9 @@ def run (risc_v_exe):
     print(results_dir)
     subprocess.call([ 'bash', shell_file ])
 
-    for file in os.listdir('results'):
-        subprocess.call([ 'echo', file ])
-        subprocess.call([ 'cat', os.path.join('results', file) ])
+    # for file in os.listdir('results'):
+    #     subprocess.call([ 'echo', file ])
+    #     subprocess.call([ 'cat', os.path.join('results', file) ])
 
 
 if __name__ == '__main__':
