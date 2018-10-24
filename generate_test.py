@@ -69,12 +69,73 @@ def parse_test_file (filepath):
                 for line in body.split('\n')
             ]) + '\n'
 
-            yield i, name, body, inputs, outputs
+            yield i, name, body, inputs, outputs, 100
+    return parse_testcases(lines)
 
-    testcases = list(parse_testcases(lines))
-    for testcase in testcases:
-        print(testcase)
+def write_file (path, contents):
+    with open(path, 'w') as f:
+        f.write(contents)
+
+def unindent (s):
+    return '\n'.join([ 
+        line.strip() 
+        for line in s.strip().split('\n')
+    ])
+
+def generate_files (target_dir, riscv_as = 'riscv-as', od = 'od'):
+    def generate (src_file_path):
+        testcases = parse_test_file(src_file_path)
+        base_name = os.path.basename(src_file_path).strip('.test.s')
+        print(base_name)
+
+        base_path = os.path.join(target_dir, base_name)
+
+        for i, name, body, inputs, outputs, iterations in testcases:
+            path = lambda fmt: '%s.%d.%s'%(base_path, i, fmt)
+            input_script = unindent('''
+                %s
+                %s
+                %s
+                %s
+            '''%(
+                'load /x 0 %s'%(path('hex')),
+                '\n'.join([
+                    'writereg %d %d'%(REGISTER_MAPPINGS[reg], value)
+                    for reg, value in inputs.items()
+                ]),
+                'run 0 %d'%iterations,
+                '\n'.join([
+                    'readreg %d'%(REGISTER_MAPPINGS[reg])
+                    for reg, _ in outputs.items()
+                ])
+            ))
+            expected_output = unindent('''
+                %s
+            '''%(
+                '\n'.join([
+                    'X%d = %d'%(REGISTER_MAPPINGS[reg], value)
+                    for reg, value in outputs.items()
+                ])
+            ))
+
+            # Write generated files
+            write_file(path('s'), body)
+            write_file(path('script.txt'), input_script)
+            write_file(path('expected.txt'), expected_output)
+
+
+    return generate
+
+def generate_files_from_directory (dir_path, target_dir):
+    files = [
+        os.path.join(dir_path, filepath)
+        for filepath in os.listdir(dir_path)
+        if os.path.isfile(os.path.join(dir_path, filepath))
+    ]
+    # Generate target directory if it doesn't exist
+    if not os.path.isdir(target_dir):
+        os.mkdir(target_dir)
+    return list(map(generate_files(target_dir), files))
 
 if __name__ == '__main__':
-    filepath = 'tests/add.test.s'
-    parse_test_file(filepath)
+    generate_files_from_directory('tests', 'generated')
