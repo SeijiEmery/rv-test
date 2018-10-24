@@ -9,6 +9,7 @@ To install:
 	git clone https://github.com/SeijiEmery/rv-test.git
 	cd rv-test
 	chmod +x ./run_tests.py
+	chmod +x ./clean.py
 	
 To run:
 	
@@ -18,6 +19,10 @@ To run:
 To clean:
 
 	./run_tests.py clean
+	
+or
+
+	./clean.py
 	
 To run interactively:
 
