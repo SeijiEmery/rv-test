@@ -16,7 +16,7 @@ def unindent (s):
         for line in s.strip().split('\n')
     ])
 
-def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', riscv_ld = 'riscv-ld', riscv_objcopy = 'riscv-objcopy', od = 'od', do_link=False):
+def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', riscv_ld = 'riscv-ld', riscv_objcopy = 'riscv-objcopy', od = 'od', do_link=True):
     def generate (src_file_path):
         testcases = parse_test_file(src_file_path)
         base_name = os.path.basename(src_file_path).strip('.test.s')
