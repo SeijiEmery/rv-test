@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import re
 import subprocess
 import sys
 import getopt
@@ -25,6 +26,31 @@ def run (risc_v_exe):
     print(results_dir)
     subprocess.call([ 'bash', shell_file ])
 
+def summarize (tests_dir = 'tests', results_dir = 'results'):
+    tests_passed, tests_failed = 0, 0
+    for filename in os.listdir(results_dir):
+        match = re.match(r'([^\.]+)\.(\d+)\.diff', filename)
+        if not match:
+            print("Skipping '%s'"%filename)
+            continue
+        testname, testnum = match.group(1, 2)
+        with open(os.path.join(results_dir, filename), 'r') as f:
+            contents = f.read()
+        if len(contents.strip()) == 0:
+            print("\033[32mTest passed:\033[0m %s.%s"%(testname, testnum))
+            tests_passed += 1
+        else:
+            print("\033[31mTest failed:\033[0m %s.%s"%(testname, testnum))
+            # with open(os.path.join(tests_dir, '%s.test.s'%testname)) as f:
+            #     print(f.read())
+            print('\t'+'\n\t'.join(contents.strip().split('\n')))
+            tests_failed += 1
+
+    if tests_failed == 0:
+        print("\033[32mAll tests passed!\033[0m")
+    else:
+        print("\033[31m%d / %d tests passed\033[0m"%(tests_passed, tests_passed + tests_failed))
+
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         print('usage: %s clean | [-i] <path-to-your-riscv-executable>'%sys.argv[0])
@@ -40,6 +66,7 @@ if __name__ == '__main__':
                 sys.exit(0)
         
         run(args[0])
+        summarize()
         sys.exit(0)
 
     except getopt.GetoptError:
