@@ -103,11 +103,11 @@ def run_tests (risc_v_executable, dir = 'generated', results_dir = 'results'):
     else:
         print("\033[31m%d / %d tests passed\033[0m"%(tests_passed, tests_passed + tests_failed))
 
-def run (risc_v_exe, rebuild = True):
+def run (risc_v_exe, rebuild = True, **kwargs):
     if rebuild:
         clean_generated_files()
         generate_files_from_directory(
-            'tests', 'generated', 'results', risc_v_exe)
+            'tests', 'generated', 'results', risc_v_exe, **kwargs)
     run_tests(risc_v_exe)
 
 if __name__ == '__main__':
@@ -118,13 +118,18 @@ if __name__ == '__main__':
         clean_generated_files()
         sys.exit(0)
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'i', ['interactive='])
+        generate_options = {}
+        opts, args = getopt.getopt(sys.argv[1:], 'iA:O', ['interactive=', 'as=', 'objcopy='])
         for opt, arg in opts:
-            if opt in ('-i', 'interactive'):
+            if opt in ('-i', '--interactive'):
                 run_interactively(sys.argv[0], args[0], 'tests')
                 sys.exit(0)
+            elif opt in ('-A', '--as'):
+                generate_options['riscv_as'] = arg
+            elif opt in ('-O', '--objcopy'):
+                generate_options['riscv_objcopy'] = arg
         
-        run(args[0])
+        run(args[0], **generate_options)
         sys.exit(0)
 
     except getopt.GetoptError:
