@@ -86,7 +86,7 @@ def run_tests (risc_v_executable, dir = 'generated', results_dir = 'results'):
     tests = [ 
         "%s.%s"%match.group(1, 2)
         for match in [ 
-            re.match(r'([^\.]+)\.(\d+)\.script', filename) 
+            re.match(r'([^\.]+)\.(\d+(?:\.[a-zA-Z0-9\-_$]+)?)\.script', filename) 
             for filename in os.listdir(dir)
         ]
         if match is not None
