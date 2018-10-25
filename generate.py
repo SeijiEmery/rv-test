@@ -16,7 +16,7 @@ def unindent (s):
         for line in s.strip().split('\n')
     ])
 
-def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', riscv_objcopy = 'riscv-objcopy', od = 'od'):
+def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', riscv_ld = 'riscv-ld', riscv_objcopy = 'riscv-objcopy', od = 'od'):
     def generate (src_file_path):
         testcases = parse_test_file(src_file_path)
         base_name = os.path.basename(src_file_path).strip('.test.s')
@@ -66,7 +66,7 @@ def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', riscv_objcop
     return generate
 
 
-def generate_files_from_directory (dir_path, target_dir, results_dir, risc_v_exe):
+def generate_files_from_directory (dir_path, target_dir, results_dir, risc_v_exe, **kwargs):
     files = [
         os.path.join(dir_path, filepath)
         for filepath in os.listdir(dir_path)
@@ -81,6 +81,6 @@ def generate_files_from_directory (dir_path, target_dir, results_dir, risc_v_exe
     # Generate files for all tests
     tests = list(itertools.chain.from_iterable(
         map(
-            generate_files(target_dir, results_dir), 
+            generate_files(target_dir, results_dir, **kwargs),
             files
         )))
