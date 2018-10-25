@@ -19,12 +19,6 @@ def run_interactively (program_name, risc_v_exe, src_dir_path):
     print(cmd)
     subprocess.call(cmd, shell=True, stdout=sys.stdout, stderr=sys.stderr)
 
-def run (risc_v_exe):
-    clean_generated_files()
-    generate_files_from_directory(
-        './tests', './generated', './results', risc_v_exe)
-    run_tests(risc_v_exe)
-
 def run_test (risc_v_executable, dir = 'generated', results_dir = 'results'):
     def run (test):
         print("\033[36mRunning test: '%s'\033[0m"%test)
@@ -84,6 +78,13 @@ def run_tests (risc_v_executable, dir = 'generated', results_dir = 'results'):
         print("\033[32mAll tests passed!\033[0m")
     else:
         print("\033[31m%d / %d tests passed\033[0m"%(tests_passed, tests_passed + tests_failed))
+
+def run (risc_v_exe, rebuild = True):
+    if rebuild:
+        clean_generated_files()
+        generate_files_from_directory(
+            'tests', 'generated', 'results', risc_v_exe)
+    run_tests(risc_v_exe)
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
