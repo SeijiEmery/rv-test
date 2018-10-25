@@ -119,7 +119,7 @@ if __name__ == '__main__':
         sys.exit(0)
     try:
         generate_options = {}
-        opts, args = getopt.getopt(sys.argv[1:], 'iA:O', ['interactive=', 'as=', 'objcopy='])
+        opts, args = getopt.getopt(sys.argv[1:], 'iA:OL', ['interactive=', 'as=', 'objcopy=', 'ld='])
         for opt, arg in opts:
             if opt in ('-i', '--interactive'):
                 run_interactively(sys.argv[0], args[0], 'tests')
@@ -128,6 +128,8 @@ if __name__ == '__main__':
                 generate_options['riscv_as'] = arg
             elif opt in ('-O', '--objcopy'):
                 generate_options['riscv_objcopy'] = arg
+            elif opt in ('-L', '--ld'):
+                generate_options['riscv_ld'] = arg
         
         run(args[0], **generate_options)
         sys.exit(0)
