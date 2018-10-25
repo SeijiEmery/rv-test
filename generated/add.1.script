@@ -1,0 +1,6 @@
+load /x 0 generated/add.1.hex
+writereg 1 10
+writereg 2 10
+run 0 1000
+readreg 1
+readreg 2
