@@ -52,9 +52,12 @@ def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', riscv_ld = '
 
             # Run assembler + od to generate binary + .hex files
             subprocess.call('%s %s -o %s'%(
-                riscv_as, path('s'), path('elf')), shell=True)
+                riscv_as, path('s'), path('as.o')), shell=True)
+            subprocess.call('%s --script=%s -o %s %s'%(
+                riscv_ld, os.path.abspath(os.path.join(target_dir, '..', 'riscv_sim.ld')), 
+                path('ld.o'), path('as.o')), shell=True)
             subprocess.call('%s -O binary --only-section=.text %s %s'%(
-                riscv_objcopy, path('elf'), path('bin')), shell=True)
+                riscv_objcopy, path('ld.o'), path('bin')), shell=True)
             subprocess.call('%s -t x1 %s > %s'%(
                 od, path('bin'), path('hex')), shell=True)
             yield map(os.path.abspath, (
