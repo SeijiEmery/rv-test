@@ -54,20 +54,16 @@ def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', riscv_ld = '
             write_file(path('expected.txt'), expected_output)
 
             # Run assembler + od to generate binary + .hex files
-            subprocess.call('%s %s -o %s'%(
-                riscv_as, path('s'), path('as.o')), shell=True)
+            subprocess.call([riscv_as, path('s'), '-o', path('as.o')])
             objfile = path('as.o')
 
             if do_link:
-                subprocess.call('%s --script=%s -o %s %s'%(
-                    riscv_ld, os.path.abspath(os.path.join(target_dir, '..', 'riscv_sim.ld')), 
-                    path('ld.o'), objfile), shell=True)
+                subprocess.call([riscv_ld, '--script='+os.path.abspath(os.path.join(target_dir, '..', 'riscv_sim.ld')), '-o', path('ld.o'), objfile])
                 objfile = path('ld.o')
 
-            subprocess.call('%s -O binary --only-section=.text %s %s'%(
-                riscv_objcopy, objfile, path('bin')), shell=True)
-            subprocess.call('%s -t x1 %s > %s'%(
-                od, path('bin'), path('hex')), shell=True)
+            subprocess.call([riscv_objcopy, '-O', 'binary', '--only-section=.text', objfile, path('bin')])
+            with open(path('hex'), 'w') as f:
+                subprocess.call([od, '-t', 'x1', path('bin')], stdout=f)
             yield map(os.path.abspath, (
                 path('script'), 
                 path('lastrun.txt'), 
