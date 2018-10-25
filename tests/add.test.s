@@ -8,11 +8,12 @@ test "addition test" {{
 }}
 
 test "test 2" {{
-    inputs {{ x1 10 }}
+    inputs {{ x1 10 x2 10 }}
 
     addi x1, x0, 10
+    addi x2, x1, 10
 
-    outputs {{ x1 20 }}
+    outputs {{ x1 10 x2 20 }}
 }}
 
 # Note that test names are optional (and currently unused)
