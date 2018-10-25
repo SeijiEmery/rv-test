@@ -25,11 +25,18 @@ def run_test (risc_v_executable, dir = 'generated', results_dir = 'results'):
         with open(os.path.join(dir, test + '.script'), 'rb') as f:
             input_script = f.read()
 
-        result = subprocess.run(
-            risc_v_executable, 
-            input=input_script,
-            capture_output=True
-        )
+        try:
+            result = subprocess.run(
+                risc_v_executable, 
+                input=input_script,
+                capture_output=True
+            )
+        except TypeError: # python < 3.7
+            result = subprocess.run(
+                risc_v_executable, 
+                input=input_script
+            )
+
         if result.returncode != 0:
             print("\033[31mTest Failed: returned %s\033[0m"%result.returncode)
             return False
