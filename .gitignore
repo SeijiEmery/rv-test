@@ -1,1 +1,5 @@
 *.pyc
+generated/*.bin
+generated/*.elf
+generated/*.lastrun.txt
+results/*
