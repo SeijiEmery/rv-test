@@ -77,6 +77,8 @@ def run_test (risc_v_executable, dir = 'generated', results_dir = 'results'):
 
 
 def run_tests (risc_v_executable, dir = 'generated', results_dir = 'results'):
+    if not os.path.isdir(dir):
+        os.mkdir(dir)
     if not os.path.isdir(results_dir):
         os.mkdir(results_dir)
 
