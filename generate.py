@@ -64,7 +64,7 @@ def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', riscv_ld = '
             write_file(path('expected.txt'), expected_output)
 
             # Run assembler + od to generate binary + .hex files
-            subprocess.call('%s "%s" -o "%s"'%(
+            subprocess.call('%s -march=rv64im "%s" -o "%s"'%(
                 riscv_as, path('s'), path('as.o')), shell=True)
             objfile = path('as.o')
 
