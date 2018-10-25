@@ -68,7 +68,7 @@ def parse_test_file (filepath):
                 for line in body.split('\n')
             ]) + '\nebreak\n'
 
-            yield i, name, body, inputs, outputs, 100
+            yield i, name, body, inputs, outputs, 1000
     return parse_testcases(lines)
 
 

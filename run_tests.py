@@ -6,6 +6,7 @@ import sys
 import getopt
 from generate import generate_files_from_directory
 from clean import clean_generated_files
+import difflib
 
 def run_interactively (program_name, risc_v_exe, src_dir_path):
     cmd = 'when-changed %s %s -c clear; python3 %s %s'%(
@@ -20,30 +21,63 @@ def run_interactively (program_name, risc_v_exe, src_dir_path):
 
 def run (risc_v_exe):
     clean_generated_files()
-    shell_file, results_dir = generate_files_from_directory(
+    generate_files_from_directory(
         './tests', './generated', './results', risc_v_exe)
-    print(shell_file)
-    print(results_dir)
-    subprocess.call([ 'bash', shell_file ])
+    run_tests(risc_v_exe)
 
-def summarize (tests_dir = 'tests', results_dir = 'results'):
+def run_test (risc_v_executable, dir = 'generated', results_dir = 'results'):
+    def run (test):
+        print("\033[36mRunning test: '%s'\033[0m"%test)
+        with open(os.path.join(dir, test + '.script'), 'rb') as f:
+            input_script = f.read()
+
+        result = subprocess.run(
+            risc_v_executable, 
+            input=input_script,
+            capture_output=True
+        )
+        if result.returncode != 0:
+            print("\033[31mTest Failed: returned %s\033[0m"%result.returncode)
+            return False
+
+        output = result.stdout.decode('utf-8')
+        output = re.sub(r'RISCV[^>]*>\s*', '', output)
+        with open(os.path.join(dir, test + '.lastrun.txt'), 'w') as f:
+            f.write(output)
+        with open(os.path.join(dir, test + '.expected.txt'), 'r') as f:
+            expected = f.read()
+        diff = '\n'.join([
+            line for line in
+                difflib.ndiff(expected.split('\n'), output.split('\n'))
+            if line[0] not in (' ', '?')
+        ])
+        with open(os.path.join(results_dir, test + '.diff'), 'w') as f:
+            f.write(diff)
+        if len(diff.strip()) != 0:
+            print("\033[31mTest Failed (output diff):\033[0m")
+            print(diff)
+            return False
+
+        print("\033[32mTest Passed!\033[0m")
+        return True
+    return run
+
+
+def run_tests (risc_v_executable, dir = 'generated', results_dir = 'results'):
     tests_passed, tests_failed = 0, 0
-    for filename in os.listdir(results_dir):
-        match = re.match(r'([^\.]+)\.(\d+)\.diff', filename)
-        if not match:
-            print("Skipping '%s'"%filename)
-            continue
-        testname, testnum = match.group(1, 2)
-        with open(os.path.join(results_dir, filename), 'r') as f:
-            contents = f.read()
-        if len(contents.strip()) == 0:
-            print("\033[32mTest passed:\033[0m %s.%s"%(testname, testnum))
+    tests = [ 
+        "%s.%s"%match.group(1, 2)
+        for match in [ 
+            re.match(r'([^\.]+)\.(\d+)\.script', filename) 
+            for filename in os.listdir(dir)
+        ]
+        if match is not None
+    ]
+    print("Found tests: '%s'"%tests)
+    for test_result in map(run_test(risc_v_executable), tests):
+        if test_result == True:
             tests_passed += 1
         else:
-            print("\033[31mTest failed:\033[0m %s.%s"%(testname, testnum))
-            # with open(os.path.join(tests_dir, '%s.test.s'%testname)) as f:
-            #     print(f.read())
-            print('\t'+'\n\t'.join(contents.strip().split('\n')))
             tests_failed += 1
 
     if tests_failed == 0:
@@ -66,7 +100,6 @@ if __name__ == '__main__':
                 sys.exit(0)
         
         run(args[0])
-        summarize()
         sys.exit(0)
 
     except getopt.GetoptError:

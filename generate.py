@@ -43,7 +43,7 @@ def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', riscv_objcop
             expected_output = '\n'.join([
                 'R%d = %d'%(REGISTER_MAPPINGS[reg], value)
                 for reg, value in outputs.items()
-            ]) + '\n\n'
+            ]) + '\n'
 
             # Write generated files
             write_file(path('s'), body)
@@ -65,6 +65,7 @@ def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', riscv_objcop
             ))
     return generate
 
+
 def generate_files_from_directory (dir_path, target_dir, results_dir, risc_v_exe):
     files = [
         os.path.join(dir_path, filepath)
@@ -78,21 +79,8 @@ def generate_files_from_directory (dir_path, target_dir, results_dir, risc_v_exe
         os.mkdir(results_dir)
 
     # Generate files for all tests
-    tests = itertools.chain.from_iterable(
+    tests = list(itertools.chain.from_iterable(
         map(
             generate_files(target_dir, results_dir), 
             files
-        ))
-
-    shell_code = ''.join([
-        "rm -f %s && cat %s | %s | sed 's/^\(RISCV[^>]*>[[:space:]]*\)*//' > %s && diff %s %s > %s && cat %s\n"%(
-            out,
-            script, risc_v_exe, out,
-            out, expected, diff,
-            diff)
-        for script, out, expected, diff in tests
-    ])
-    run_path = os.path.join(target_dir, 'run.sh')
-    write_file(run_path, shell_code)
-    return map(os.path.abspath, (run_path, results_dir))
-
+        )))
