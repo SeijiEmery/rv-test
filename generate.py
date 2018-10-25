@@ -43,7 +43,7 @@ def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', riscv_objcop
             expected_output = '\n'.join([
                 'R%d = %d'%(REGISTER_MAPPINGS[reg], value)
                 for reg, value in outputs.items()
-            ]) + '\n'
+            ]) + '\n\n'
 
             # Write generated files
             write_file(path('s'), body)
@@ -85,7 +85,7 @@ def generate_files_from_directory (dir_path, target_dir, results_dir, risc_v_exe
         ))
 
     shell_code = ''.join([
-        "rm -f %s && cat %s | %s | sed 's/^\(RISCV[^>]*> \)*//' > %s && diff %s %s > %s && cat %s\n"%(
+        "rm -f %s && cat %s | %s | sed 's/^\(RISCV[^>]*>[[:space:]]*\)*//' > %s && diff %s %s > %s && cat %s\n"%(
             out,
             script, risc_v_exe, out,
             out, expected, diff,
