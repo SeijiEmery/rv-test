@@ -22,22 +22,42 @@ def run_interactively (program_name, risc_v_exe, src_dir_path):
 def run_test (risc_v_executable, dir = 'generated', results_dir = 'results'):
     def run (test):
         print("\033[36mRunning test: '%s'\033[0m"%test)
-        with open(os.path.join(dir, test + '.script'), 'rb') as f:
-            input_script = f.read()
+        with open(os.path.join(dir, test + '.script'), 'rb') as input_file:
+            input_script = input_file.read()
+        try:
+            result = subprocess.run(
+                risc_v_executable, 
+                input=input_script,
+                capture_output = True
+            )
+            output = result.stdout.decode('utf-8')
+            err = result.stderr.decode('utf-8')
+            returncode = result.returncode
+            with open(os.path.join(dir, test + '.lastrun.txt'), 'w') as f:
+                f.write(output)
+        except TypeError: # python < 3.7
+            infile = open(os.path.join(dir, test + '.script'), 'rb')
+            outfile = open(os.path.join(dir, test + '.lastrun.txt'), 'w+')
+            p = subprocess.Popen(
+                risc_v_executable,
+                stdin=infile,
+                stdout=outfile,
+                stderr=sys.stderr)
+            p.wait()
+            returncode = p.returncode
+            err = ''
 
-        result = subprocess.run(
-            risc_v_executable, 
-            input=input_script,
-            capture_output=True
-        )
-        if result.returncode != 0:
-            print("\033[31mTest Failed: returned %s\033[0m"%result.returncode)
+            infile.close()
+            outfile.close()
+            with open(os.path.join(dir, test + '.lastrun.txt'), 'r') as outfile:
+                output = outfile.read()
+
+        if returncode != 0:
+            print("\033[31mTest Failed: returned %s\033[0m"%returncode)
+            print(err)
             return False
 
-        output = result.stdout.decode('utf-8')
         output = re.sub(r'RISCV[^>]*>\s*', '', output)
-        with open(os.path.join(dir, test + '.lastrun.txt'), 'w') as f:
-            f.write(output)
         with open(os.path.join(dir, test + '.expected.txt'), 'r') as f:
             expected = f.read()
         diff = '\n'.join([
