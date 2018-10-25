@@ -18,10 +18,10 @@ def run_interactively (program_name, risc_v_exe, src_dir_path):
     print(cmd)
     subprocess.call(cmd, shell=True, stdout=sys.stdout, stderr=sys.stderr)
 
-def run (risc_v_exe):
+def run (risc_v_exe, riscv_as=None, riscv_objcopy=None):
     clean_generated_files()
     shell_file, results_dir = generate_files_from_directory(
-        './tests', './generated', './results', risc_v_exe)
+        './tests', './generated', './results', risc_v_exe, riscv_as=riscv_as, riscv_objcopy=riscv_objcopy)
     print(shell_file)
     print(results_dir)
     subprocess.call([ 'bash', shell_file ])
@@ -59,13 +59,18 @@ if __name__ == '__main__':
         clean_generated_files()
         sys.exit(0)
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'i', ['interactive='])
+        generate_options = {}
+        opts, args = getopt.getopt(sys.argv[1:], 'iA:O:', ['interactive=', 'as=', 'objcopy='])
         for opt, arg in opts:
-            if opt in ('-i', 'interactive'):
+            if opt in ('-i', '--interactive'):
                 run_interactively(sys.argv[0], args[0], 'tests')
                 sys.exit(0)
+            elif opt in ('-A', '--as'):
+                generate_options['riscv_as'] = arg
+            elif opt in ('-O', '--objcopy'):
+                generate_options['riscv_objcopy'] = arg
         
-        run(args[0])
+        run(args[0], **generate_options)
         summarize()
         sys.exit(0)
 
