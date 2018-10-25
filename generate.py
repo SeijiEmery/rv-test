@@ -43,8 +43,18 @@ def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', riscv_ld = '
                     for reg, _ in outputs.items()
                 ])
             ))
+
+            def twos_complement (value, n=64):
+                if value >= 0:
+                    return value
+                mask = 2 ** (n - 1)
+                return -(value & mask) + (value & ~mask)
+
+            def to_unsigned (value, n=64):
+                return abs(twos_complement(value, n))
+
             expected_output = '\n'.join([
-                'R%d = %d'%(REGISTER_MAPPINGS[reg], value)
+                'R%d = %d'%(REGISTER_MAPPINGS[reg], to_unsigned(value))
                 for reg, value in outputs.items()
             ]) + '\n'
 
@@ -54,19 +64,19 @@ def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', riscv_ld = '
             write_file(path('expected.txt'), expected_output)
 
             # Run assembler + od to generate binary + .hex files
-            subprocess.call('%s %s -o %s'%(
+            subprocess.call('%s "%s" -o "%s"'%(
                 riscv_as, path('s'), path('as.o')), shell=True)
             objfile = path('as.o')
 
             if do_link:
-                subprocess.call('%s --script=%s -o %s %s'%(
+                subprocess.call('%s --script="%s" -o "%s" "%s"'%(
                     riscv_ld, os.path.abspath(os.path.join(target_dir, '..', 'riscv_sim.ld')), 
                     path('ld.o'), objfile), shell=True)
                 objfile = path('ld.o')
 
-            subprocess.call('%s -O binary --only-section=.text %s %s'%(
+            subprocess.call('%s -O binary --only-section=.text "%s" "%s"'%(
                 riscv_objcopy, objfile, path('bin')), shell=True)
-            subprocess.call('%s -t x1 %s > %s'%(
+            subprocess.call('%s -t x1 "%s" > "%s"'%(
                 od, path('bin'), path('hex')), shell=True)
             yield map(os.path.abspath, (
                 path('script'), 
