@@ -20,7 +20,7 @@ def run_interactively (program_name, risc_v_exe, src_dir_path):
     print(cmd)
     subprocess.call(cmd, shell=True, stdout=sys.stdout, stderr=sys.stderr)
 
-def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', verbose_test_output = False):
+def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', verbose_test_output = False, **kwargs):
     def run (test):
         print("\033[36mRunning test: '%s'\033[0m"%test)
         with open(os.path.join(dir, test + '.script'), 'rb') as input_file:
