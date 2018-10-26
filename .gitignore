@@ -1,6 +1,3 @@
 *.pyc
-generated/*.bin
-generated/*.as.o
-generated/*.ld.o
-generated/*.lastrun.txt
+generated/*
 results/*
