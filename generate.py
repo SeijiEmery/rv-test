@@ -4,7 +4,7 @@ import itertools
 import subprocess
 from registers import REGISTER_MAPPINGS
 from parse_file import parse_test_file
-
+import re
 
 def write_file (path, contents):
     with open(path, 'w') as f:
@@ -16,13 +16,25 @@ def unindent (s):
         for line in s.strip().split('\n')
     ])
 
-def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', riscv_ld = 'riscv-ld', riscv_objcopy = 'riscv-objcopy', od = 'od'):
+def to_unsigned (value, n=64):
+    if value >= 0:
+        return value
+    return abs(~(value & ((1 << 64) - 1)) + 1)
+
+assert(to_unsigned(-1) == 18446744073709551615)
+assert(to_unsigned(-7) == 18446744073709551609)
+assert(to_unsigned(0xDEADBEEF) == 0xDEADBEEF)
+
+def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', riscv_ld = 'riscv-ld', riscv_objcopy = 'riscv-objcopy', od = 'od', do_link=True):
     def generate (src_file_path):
         testcases = parse_test_file(src_file_path)
         base_name = os.path.basename(src_file_path).strip('.test.s')
         base_path = os.path.join(target_dir, base_name)
         for i, name, body, inputs, outputs, iterations in testcases:
-            path = lambda fmt: '%s.%d.%s'%(base_path, i, fmt)
+            testpathname = '%s.%d%s'%(base_path, i, 
+                ('.' + re.sub(r'\s+', '-', name) if name else ''))
+            print(testpathname)
+            path = lambda fmt: '%s.%s'%(testpathname, fmt)
             input_script = unindent('''
                 %s
                 %s
@@ -40,8 +52,11 @@ def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', riscv_ld = '
                     for reg, _ in outputs.items()
                 ])
             ))
+
+            
+
             expected_output = '\n'.join([
-                'R%d = %d'%(REGISTER_MAPPINGS[reg], value)
+                'R%d = %d'%(REGISTER_MAPPINGS[reg], to_unsigned(value))
                 for reg, value in outputs.items()
             ]) + '\n'
 
@@ -51,20 +66,21 @@ def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', riscv_ld = '
             write_file(path('expected.txt'), expected_output)
 
             # Run assembler + od to generate binary + .hex files
-            subprocess.call('%s %s -o %s'%(
-                riscv_as, path('s'), path('as.o')), shell=True)
-            subprocess.call('%s --script=%s -o %s %s'%(
-                riscv_ld, os.path.abspath(os.path.join(target_dir, '..', 'riscv_sim.ld')), 
-                path('ld.o'), path('as.o')), shell=True)
-            subprocess.call('%s -O binary --only-section=.text %s %s'%(
-                riscv_objcopy, path('ld.o'), path('bin')), shell=True)
-            subprocess.call('%s -t x1 %s > %s'%(
-                od, path('bin'), path('hex')), shell=True)
+            subprocess.call([riscv_as, '-march=rv64im', path('s'), '-o', path('as.o')])
+            objfile = path('as.o')
+
+            if do_link:
+                subprocess.call([riscv_ld, '--script='+os.path.abspath(os.path.join(target_dir, '..', 'riscv_sim.ld')), '-o', path('ld.o'), objfile])
+                objfile = path('ld.o')
+
+            subprocess.call([riscv_objcopy, '-O', 'binary', '--only-section=.text', objfile, path('bin')])
+            with open(path('hex'), 'w') as f:
+                subprocess.call([od, '-t', 'x1', path('bin')], stdout=f)
             yield map(os.path.abspath, (
                 path('script'), 
                 path('lastrun.txt'), 
                 path('expected.txt'), 
-                os.path.join(results_dir, '%s.%d.diff'%(base_name, i))
+                os.path.join(results_dir, '%s.diff'%(testpathname))
             ))
     return generate
 
@@ -73,7 +89,7 @@ def generate_files_from_directory (dir_path, target_dir, results_dir, risc_v_exe
     files = [
         os.path.join(dir_path, filepath)
         for filepath in os.listdir(dir_path)
-        if os.path.isfile(os.path.join(dir_path, filepath))
+        if os.path.isfile(os.path.join(dir_path, filepath)) and re.search(r'\.test\.s$', os.path.join(dir_path, filepath))
     ]
     # Generate target directory if it doesn't exist
     if not os.path.isdir(target_dir):

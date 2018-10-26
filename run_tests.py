@@ -86,11 +86,12 @@ def run_tests (risc_v_executable, dir = 'generated', results_dir = 'results'):
     tests = [ 
         "%s.%s"%match.group(1, 2)
         for match in [ 
-            re.match(r'([^\.]+)\.(\d+)\.script', filename) 
+            re.match(r'([^\.]+)\.(\d+(?:\.[^\.]+)?)\.script', filename) 
             for filename in os.listdir(dir)
         ]
         if match is not None
     ]
+    tests.sort()
     print("Found tests: '%s'"%tests)
     for test_result in map(run_test(risc_v_executable), tests):
         if test_result == True:
