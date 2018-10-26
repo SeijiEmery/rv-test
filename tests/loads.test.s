@@ -37,4 +37,16 @@ test {{
     lb a7,  0(gp)
 }}
 
-
+test {{
+    inputs  {{ a0 -7 }}
+    outputs {{ a1 -7 a2 4294967289 a3 65529 a4 249 a5 18446744073709551609 a6 18446744073709551609 a7 18446744073709551609 }}
+    add gp, zero, zero
+    sd a0,  0(gp)
+    ld a1,  0(gp)
+    lwu a2, 0(gp)
+    lhu a3, 0(gp)
+    lbu a4, 0(gp)
+    lw a5,  0(gp)
+    lh a6,  0(gp)
+    lb a7,  0(gp)
+}}
