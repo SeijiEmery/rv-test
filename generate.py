@@ -89,7 +89,7 @@ def generate_files_from_directory (dir_path, target_dir, results_dir, risc_v_exe
     files = [
         os.path.join(dir_path, filepath)
         for filepath in os.listdir(dir_path)
-        if os.path.isfile(os.path.join(dir_path, filepath))
+        if os.path.isfile(os.path.join(dir_path, filepath)) and re.search(r'\.test\.s$', os.path.join(dir_path, filepath))
     ]
     # Generate target directory if it doesn't exist
     if not os.path.isdir(target_dir):
