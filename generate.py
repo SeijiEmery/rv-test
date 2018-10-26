@@ -56,7 +56,7 @@ def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', riscv_ld = '
             
 
             expected_output = '\n'.join([
-                'R%d = %d'%(REGISTER_MAPPINGS[reg], to_unsigned(value))
+                'R%d = %d'%(REGISTER_MAPPINGS[reg], value)
                 for reg, value in outputs.items()
             ]) + '\n'
 
