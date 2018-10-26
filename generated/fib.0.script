@@ -1,0 +1,6 @@
+load /x 0 generated/fib.0.hex
+writereg 2 4096
+writereg 10 10
+run 0 100000
+readreg 2
+readreg 10

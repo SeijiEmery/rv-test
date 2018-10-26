@@ -1,0 +1,22 @@
+load /x 0 generated/mul.0.mul-mulh.hex
+writereg 10 1
+writereg 11 -1
+writereg 12 35444612188192495
+writereg 13 -35444612188192495
+writereg 14 18446744073709551615
+writereg 8 -1
+writereg 9 -1
+writereg 18 35444612188192495
+writereg 19 -35444612188192495
+writereg 20 18446744073709551615
+run 0 100000
+readreg 5
+readreg 6
+readreg 7
+readreg 28
+readreg 29
+readreg 8
+readreg 9
+readreg 18
+readreg 19
+readreg 20

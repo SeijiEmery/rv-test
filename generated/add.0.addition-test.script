@@ -1,0 +1,8 @@
+load /x 0 generated/add.0.addition-test.hex
+writereg 1 1
+writereg 2 2
+writereg 3 99
+run 0 100000
+readreg 1
+readreg 2
+readreg 3
