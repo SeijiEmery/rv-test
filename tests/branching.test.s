@@ -21,7 +21,7 @@ l1:
 
 test "jal ra" {{
     inputs  {{ ra -1 t1 22 }}
-    outputs {{ ra  8 t1 12 }}
+    outputs {{ ra  4 t1 12 }}
 
     jal ra, l1
     addi t1, t1, 50
