@@ -25,7 +25,7 @@ assert(to_unsigned(-1) == 18446744073709551615)
 assert(to_unsigned(-7) == 18446744073709551609)
 assert(to_unsigned(0xDEADBEEF) == 0xDEADBEEF)
 
-def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', riscv_ld = 'riscv-ld', riscv_objcopy = 'riscv-objcopy', od = 'od', do_link=True):
+def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', riscv_ld = 'riscv-ld', riscv_objcopy = 'riscv-objcopy', od = 'od', do_link=True, **kwargs):
     def generate (src_file_path):
         testcases = parse_test_file(src_file_path)
         base_name = os.path.basename(src_file_path).strip('.test.s')
@@ -56,7 +56,7 @@ def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', riscv_ld = '
             
 
             expected_output = '\n'.join([
-                'R%d = %d'%(REGISTER_MAPPINGS[reg], to_unsigned(value))
+                'R%d = %d'%(REGISTER_MAPPINGS[reg], value)
                 for reg, value in outputs.items()
             ]) + '\n'
 

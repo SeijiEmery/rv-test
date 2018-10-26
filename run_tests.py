@@ -6,6 +6,7 @@ import sys
 import getopt
 from generate import generate_files_from_directory
 from clean import clean_generated_files
+from registers import REGISTER_TO_STR
 import difflib
 
 def run_interactively (program_name, risc_v_exe, src_dir_path):
@@ -19,7 +20,7 @@ def run_interactively (program_name, risc_v_exe, src_dir_path):
     print(cmd)
     subprocess.call(cmd, shell=True, stdout=sys.stdout, stderr=sys.stderr)
 
-def run_test (risc_v_executable, dir = 'generated', results_dir = 'results'):
+def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', verbose_test_output = False):
     def run (test):
         print("\033[36mRunning test: '%s'\033[0m"%test)
         with open(os.path.join(dir, test + '.script'), 'rb') as input_file:
@@ -59,24 +60,48 @@ def run_test (risc_v_executable, dir = 'generated', results_dir = 'results'):
         output = re.sub(r'RISCV[^>]*>\s*', '', output)
         with open(os.path.join(dir, test + '.expected.txt'), 'r') as f:
             expected = f.read()
-        diff = '\n'.join([
-            line for line in
-                difflib.ndiff(expected.split('\n'), output.split('\n'))
-            if line[0] not in (' ', '?')
-        ])
-        with open(os.path.join(results_dir, test + '.diff'), 'w') as f:
-            f.write(diff)
-        if len(diff.strip()) != 0:
-            print("\033[31mTest Failed (output diff):\033[0m")
-            print(diff)
-            return False
 
-        print("\033[32mTest Passed!\033[0m")
-        return True
+        expected_values = {}
+        for match in re.finditer(r'R(\d+)\s*=\s*(-?\d+[xX]?\d*)', expected):
+            reg, value = match.group(1, 2)
+            expected_values[REGISTER_TO_STR[int(reg)]] = int(value)
+
+        test_ok = True
+        for match in re.finditer(r'R(\d+)\s*=\s*(-?\d+[xX]?\d*)', output):
+            reg, value = match.group(1, 2)
+            reg = REGISTER_TO_STR[int(reg)]
+            value = int(value)
+            v2    = -((abs(value) ^ ((1 << 64) - 1)) + 1)
+            if reg in expected_values:
+                if value != expected_values[reg] and v2 != expected_values[reg]:
+                    print("\033[31m%s: expected '%s',\033[0m got '%s' (%s)"%(
+                        reg, expected_values[reg], value, v2))
+                    test_ok = False
+                elif verbose_test_output:
+                    print("\033[35m%s: got '%s' (%s)\033[0m"%(
+                        reg, value, v2))
+                del expected_values[reg]
+            else:
+                print("\033[31m%s: unexpected value\033[0m '%s' (%s)"%(
+                    reg, value, v2))
+                test_ok = False
+
+        for reg, value in expected_values.items():
+            v2 = -((abs(value) ^ ((1 << 64) - 1)) + 1)
+            print("\033[31m%s: missing, expected value\033[0m '%s' (%s)"%(
+                reg, value, v2))
+            test_ok = False
+
+        if test_ok:
+            print("\033[32mTest Passed!\033[0m")
+            return True
+        else:
+            print("\033[31mTest Failed\033[0m")
+            return False
     return run
 
 
-def run_tests (risc_v_executable, dir = 'generated', results_dir = 'results'):
+def run_tests (risc_v_executable, dir = 'generated', results_dir = 'results', **kwargs):
     if not os.path.isdir(dir):
         os.mkdir(dir)
     if not os.path.isdir(results_dir):
@@ -93,7 +118,7 @@ def run_tests (risc_v_executable, dir = 'generated', results_dir = 'results'):
     ]
     tests.sort()
     print("Found tests: '%s'"%tests)
-    for test_result in map(run_test(risc_v_executable), tests):
+    for test_result in map(run_test(risc_v_executable, **kwargs), tests):
         if test_result == True:
             tests_passed += 1
         else:
@@ -109,7 +134,7 @@ def run (risc_v_exe, rebuild = True, **kwargs):
         clean_generated_files()
         generate_files_from_directory(
             'tests', 'generated', 'results', risc_v_exe, **kwargs)
-    run_tests(risc_v_exe)
+    run_tests(risc_v_exe, **kwargs)
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
@@ -120,7 +145,7 @@ if __name__ == '__main__':
         sys.exit(0)
     try:
         generate_options = {}
-        opts, args = getopt.getopt(sys.argv[1:], 'iA:OL', ['interactive=', 'as=', 'objcopy=', 'ld='])
+        opts, args = getopt.getopt(sys.argv[1:], 'iA:OLv', ['interactive=', 'as=', 'objcopy=', 'ld=', 'verbose='])
         for opt, arg in opts:
             if opt in ('-i', '--interactive'):
                 run_interactively(sys.argv[0], args[0], 'tests')
@@ -131,7 +156,8 @@ if __name__ == '__main__':
                 generate_options['riscv_objcopy'] = arg
             elif opt in ('-L', '--ld'):
                 generate_options['riscv_ld'] = arg
-        
+            elif opt in ('-v', '--verbose'):
+                generate_options['verbose_test_output'] = True
         run(args[0], **generate_options)
         sys.exit(0)
 
