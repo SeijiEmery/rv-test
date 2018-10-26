@@ -16,6 +16,15 @@ def unindent (s):
         for line in s.strip().split('\n')
     ])
 
+def to_unsigned (value, n=64):
+    if value >= 0:
+        return value
+    return abs(~(value & ((1 << 64) - 1)) + 1)
+
+assert(to_unsigned(-1) == 18446744073709551615)
+assert(to_unsigned(-7) == 18446744073709551609)
+assert(to_unsigned(0xDEADBEEF) == 0xDEADBEEF)
+
 def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', riscv_ld = 'riscv-ld', riscv_objcopy = 'riscv-objcopy', od = 'od', do_link=True):
     def generate (src_file_path):
         testcases = parse_test_file(src_file_path)
@@ -44,14 +53,7 @@ def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', riscv_ld = '
                 ])
             ))
 
-            def twos_complement (value, n=64):
-                if value >= 0:
-                    return value
-                mask = 2 ** (n - 1)
-                return -(value & mask) + (value & ~mask)
-
-            def to_unsigned (value, n=64):
-                return abs(twos_complement(value, n))
+            
 
             expected_output = '\n'.join([
                 'R%d = %d'%(REGISTER_MAPPINGS[reg], to_unsigned(value))
