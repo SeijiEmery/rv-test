@@ -1,0 +1,11 @@
+load /x 0 generated/load.0.hex
+writereg 10 16045690984833335023
+run 0 100000
+readreg 10
+readreg 11
+readreg 12
+readreg 13
+readreg 14
+readreg 15
+readreg 16
+readreg 17

@@ -1,0 +1,8 @@
+load /x 0 generated/ra.1.srai-test-1.hex
+writereg 1 1
+writereg 2 15
+writereg 3 16
+run 0 100000
+readreg 1
+readreg 2
+readreg 3
