@@ -18,7 +18,7 @@ fib:
     jal     ra, fib
 
     ld      t0, 0(sp)
-    sd      s0, 0(sp)
+    sd      a0, 0(sp)
     addi    a0, t0, 0
     jal     ra, fib
 
@@ -28,7 +28,7 @@ fib:
     ld      ra, 8(sp)
     addi    sp, sp, 16
 return:
-    jalr    ra, zero
+    jalr    x0, 0(ra)
 
 end:
     ebreak
