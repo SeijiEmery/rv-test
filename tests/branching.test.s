@@ -21,7 +21,7 @@ l1:
 
 test "jal ra" {{
     inputs  {{ ra -1 t1 22 }}
-    outputs {{ ra  8 t1 12 }}
+    outputs {{ ra  4 t1 12 }}
 
     jal ra, l1
     addi t1, t1, 50
@@ -246,7 +246,7 @@ test "bltu -10 < -9" {{
 l1:
 }}
 
-test "fib bge" {{
+test "fib bgt" {{
     inputs  {{ s0 0 s1 1 s2 2 s3 3 s4 4 s5 5 }}
     outputs {{ s0 0 s1 1 s2 1 s3 2 s4 3 s5 5 }}
 
@@ -284,7 +284,7 @@ loop:
     add t0, t1, zero
     add t1, t2, zero
     addi a0, a0, -1
-    bge a0, zero, loop
+    bgt a0, zero, loop
 fib_end:
     add a0, t0, zero
     ret
