@@ -94,8 +94,13 @@ def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', ver
 
         if test_ok:
             print("\033[32mTest Passed!\033[0m")
+            if verbose_test_output:
+                print("\033[36moutput:\033[0m")
+                print(err)
             return True
         else:
+            print("\033[36moutput:\033[0m")
+            print(err)
             print("\033[31mTest Failed\033[0m")
             return False
     return run
