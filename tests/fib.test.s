@@ -2,25 +2,34 @@
 test {{
     inputs  {{ sp 4096 a0 10 }}
     outputs {{ sp 4096 a0 55 }}
-    call fib
-    j end
+
+    jal     ra, fib
+    j       end
 fib:
-    addi t0, zero, 1
-    ble a0, t0, return
-    addi sp, sp, -8
-    addi t0, a0, -1
-    sd t0, 0(sp)
-    addi a0, a0, -2
-    call fib
+    li      t0, 1
+    ble     a0, t0, return
 
-    ld t0, 0(sp)
-    sd a0, 0(sp)
-    add a0, zero, t0
-    call fib
+    addi    sp, sp, -16
+    sd      ra, 8(sp)
 
-    ld t0, 0(sp)
-    add a0, a0, t0
+    addi    t0, a0, -1
+    sd      t0, 0(sp)
+    addi    a0, a0, -2
+    jal     ra, fib
+
+    ld      t0, 0(sp)
+    sd      a0, 0(sp)
+    addi    a0, t0, 0
+    jal     ra, fib
+
+    ld      t0, 0(sp)
+    add     a0, a0, t0
+
+    ld      ra, 8(sp)
+    addi    sp, sp, 16
 return:
-    ret
+    jalr    x0, 0(ra)
+
 end:
+    ebreak
 }}

@@ -66,9 +66,9 @@ def parse_test_file (filepath):
             body = '\n'.join([
                 line.strip()
                 for line in body.split('\n')
-            ]) + '\nebreak\n'
+            ]) + '\nnop\nnop\nnop\nnop\nnop\nebreak\n'
 
-            yield i, name, body, inputs, outputs, 100
+            yield i, name, body, inputs, outputs, 100000
     return parse_testcases(lines)
 
 
