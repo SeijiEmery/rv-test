@@ -14,4 +14,9 @@ addw s1, s1, t0
 add s2, s2, t0
 addw s3, s3, t1
 add s4, s4, t1
+nop
+nop
+nop
+nop
+nop
 ebreak

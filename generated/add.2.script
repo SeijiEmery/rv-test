@@ -1,4 +1,5 @@
 load /x 0 generated/add.2.hex
 
-run 0 100000
+setpc 0
+run 100000
 readreg 0

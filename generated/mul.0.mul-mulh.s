@@ -8,4 +8,9 @@ mul  t3, a3, s3
 mulh s3, a3, s3
 mul  t4, a4, s4
 mulh s4, a4, s4
+nop
+nop
+nop
+nop
+nop
 ebreak

@@ -5,7 +5,8 @@ writereg 18 2
 writereg 19 3
 writereg 20 4
 writereg 21 5
-run 0 100000
+setpc 0
+run 100000
 readreg 8
 readreg 9
 readreg 18

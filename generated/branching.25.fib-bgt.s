@@ -37,4 +37,9 @@ fib_end:
 add a0, t0, zero
 ret
 end:
+nop
+nop
+nop
+nop
+nop
 ebreak

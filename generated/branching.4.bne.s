@@ -10,4 +10,9 @@ l3:
 bne a0, a2, l4
 addi t4, zero, 44
 l4:
+nop
+nop
+nop
+nop
+nop
 ebreak

@@ -27,4 +27,9 @@ jalr    x0, 0(ra)
 
 end:
 ebreak
+nop
+nop
+nop
+nop
+nop
 ebreak

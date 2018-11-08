@@ -6,4 +6,9 @@ mul  t2, a2, s2
 mulh s2, a2, s2
 mul  t3, a3, s3
 mulh s3, a3, s3
+nop
+nop
+nop
+nop
+nop
 ebreak

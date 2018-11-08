@@ -2,5 +2,6 @@ load /x 0 generated/branching.24.bltu--10-<--9.hex
 writereg 10 -10
 writereg 11 -9
 writereg 6 1
-run 0 100000
+setpc 0
+run 100000
 readreg 6

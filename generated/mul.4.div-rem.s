@@ -10,4 +10,9 @@ div t4, a4, s4
 rem s4, a4, s4
 div t5, a5, s5
 rem s5, a5, s5
+nop
+nop
+nop
+nop
+nop
 ebreak
