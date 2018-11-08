@@ -40,13 +40,15 @@ def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', riscv_ld = '
                 %s
                 %s
                 %s
+                %s
             '''%(
                 'load /x 0 %s'%(path('hex')),
                 '\n'.join([
                     'writereg %d %d'%(REGISTER_MAPPINGS[reg], value)
                     for reg, value in inputs.items()
                 ]),
-                'run 0 %d'%iterations,
+                'setpc 0',
+                'run %d'%iterations,
                 '\n'.join([
                     'readreg %d'%(REGISTER_MAPPINGS[reg])
                     for reg, _ in outputs.items()
