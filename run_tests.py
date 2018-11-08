@@ -128,6 +128,7 @@ def run_tests (risc_v_executable, dir = 'generated', results_dir = 'results', **
             tests_passed += 1
         else:
             tests_failed += 1
+            # return
 
     if tests_failed == 0:
         print("\033[32mAll tests passed!\033[0m")

@@ -11,20 +11,15 @@ test {{
         a6 18446744073709534959
         a7 18446744073709551599
     }}
-    add t0, a0, zero
-    addi t1, zero, 32
-    sll a0, a0, t0
-    or  a0, a0, t0
-
-    add gp, zero, zero
-    sd a0,  100(zero)
-    ld a1,  100(zero)
-    lwu a2, 100(zero)
-    lhu a3, 100(zero)
-    lbu a4, 100(zero)
-    lw a5,  100(zero)
-    lh a6,  100(zero)
-    lb a7,  100(zero)
+    addi gp, zero, 200
+    sd a0,  0(gp)
+    ld a1,  0(gp)
+    lwu a2, 0(gp)
+    lhu a3, 0(gp)
+    lbu a4, 0(gp)
+    lw a5,  0(gp)
+    lh a6,  0(gp)
+    lb a7,  0(gp)
 }}
 
 test {{
