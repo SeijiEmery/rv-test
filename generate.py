@@ -28,12 +28,12 @@ assert(to_unsigned(0xDEADBEEF) == 0xDEADBEEF)
 def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', riscv_ld = 'riscv-ld', riscv_objcopy = 'riscv-objcopy', od = 'od', do_link=True, **kwargs):
     def generate (src_file_path):
         testcases = parse_test_file(src_file_path)
-        base_name = os.path.basename(src_file_path).strip('.test.s')
+        base_name = os.path.basename(src_file_path).split('.test.s')[0]
         base_path = os.path.join(target_dir, base_name)
         for i, name, body, inputs, outputs, iterations in testcases:
             testpathname = '%s.%d%s'%(base_path, i, 
                 ('.' + re.sub(r'\s+', '-', name) if name else ''))
-            print(testpathname)
+            print("%s => %s"%(src_file_path, testpathname))
             path = lambda fmt: '%s.%s'%(testpathname, fmt)
             input_script = unindent('''
                 %s
@@ -85,7 +85,6 @@ def generate_files (target_dir, results_dir, riscv_as = 'riscv-as', riscv_ld = '
                 os.path.join(results_dir, '%s.diff'%(testpathname))
             ))
     return generate
-
 
 def generate_files_from_directory (dir_path, target_dir, results_dir, risc_v_exe, **kwargs):
     files = [
