@@ -74,7 +74,13 @@ def parse_test_file (filepath):
                 'inputs': inputs,
                 'outputs': outputs
             }
-    return parse_testcases(lines)
+    try:
+        tests = list(parse_testcases(lines))
+        return True, [], tests
+    except Exception as err:
+        return False, ["failed to parse '%s':\n\t%s"%(filepath,
+            str(err).replace('\n', '\n\t')
+        )], None
 
 def gen_test_asm (asm):
     return '%s\n%s\n%s\n'%(
@@ -214,13 +220,15 @@ def generate_asm_tests (src_dir='tests', gen_dir='generated', verbose = False):
     test_statuses = {}
     for file in os.listdir(src_dir):
         file_path = os.path.join(src_dir, file)
-        test_statuses[file_path] = []
-        test_messages[file_path] = []
         if os.path.isfile(file_path) and re.search(r'\.test\.s$', file_path):
-            for test in parse_test_file(file_path):
-                ok, messages = generate_files_for_test(test, gen_dir)
-                test_messages[file_path] += messages
-                test_statuses[file_path].append(ok)
+            ok, msgs, tests = parse_test_file(file_path)
+            test_statuses[file_path] = [ ok ]
+            test_messages[file_path] = msgs
+            if ok:
+                for test in tests:
+                    ok, messages = generate_files_for_test(test, gen_dir)
+                    test_messages[file_path] += messages
+                    test_statuses[file_path].append(ok)
             if all(test_statuses[file_path]):
                 print("generated '%s'"%file_path)
                 if verbose:
