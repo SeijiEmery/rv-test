@@ -140,7 +140,13 @@ def unindent (s):
     ])
 
 def gen_test_output (outputs, srcpath):
-    return '%s\n'%srcpath + '\n'.join([
+    if 'pc' in outputs:
+        pc_value = 'pc = %d\n'%outputs['pc']
+        del outputs['pc']
+    else:
+        pc_value = ''
+
+    return '%s\n'%srcpath + pc_value + '\n'.join([
         'R%d = %d'%(REGISTER_MAPPINGS[reg], value)
         for reg, value in outputs.items()
     ]) + '\n'

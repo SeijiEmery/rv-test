@@ -76,9 +76,13 @@ def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', ver
         output = re.sub(r'RISCV[^>]*>\s*', '', output)
 
         expected_values = {}
-        for match in re.finditer(r'R(\d+)\s*=\s*(-?\d+[xX]?\d*)', expected):
+        expected_pc = None
+        for match in re.finditer(r'(R\d+|pc)\s*=\s*(-?\d+[xX]?\d*)', expected):
             reg, value = match.group(1, 2)
-            expected_values[REGISTER_TO_STR[int(reg)]] = int(value)
+            if reg[0] == 'R':
+                expected_values[REGISTER_TO_STR[int(reg[1:])]] = int(value, 0)
+            elif reg == 'pc':
+                expected_pc = int(value, 0)
 
         test_ok = True
         for match in re.finditer(r'R(\d+)\s*=\s*(-?\d+[xX]?\d*)', output):
@@ -100,6 +104,18 @@ def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', ver
                     reg, value, value, v2))
                 test_ok = False
 
+        if expected_pc:
+            last_pc = None
+            for match in re.finditer(r'\(PC=(0x[A-Za-z0-9]+)\)', raw_output):
+                last_pc = int(match.group(1),0)
+            if last_pc is None:
+                raise Exception("Failed to match (PC=0x...) in output '%s'"%raw_output)
+            if last_pc != expected_pc:
+                print("\033[31mexpected pc = '%s', got '%s'\033[0m"%(
+                    hex(expected_pc) if expected_pc is not None else expected_pc,
+                    hex(last_pc) if last_pc is not None else last_pc))
+                test_ok = False
+
         for reg, value in expected_values.items():
             v2 = -((abs(value) ^ ((1 << 64) - 1)) + 1)
             print("\033[31m%s: missing, expected value\033[0m '%s' (%x, %s)"%(
@@ -113,11 +129,18 @@ def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', ver
                 print(err)
                 print("\033[36mstdout:\033[0m")
                 print(raw_output)
+                print("\033[36mexpected:\033[0m")
+                print(expected)
             return True
         else:
+            print("\033[31mTest Failed\033[0m")
             print("\033[36moutput:\033[0m")
             print(err)
-            print("\033[31mTest Failed\033[0m")
+            if verbose_test_output:
+                print("\033[36mstdout:\033[0m")
+                print(raw_output)
+                print("\033[36mexpected:\033[0m")
+                print(expected)
             return False
     return run
 

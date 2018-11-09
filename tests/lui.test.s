@@ -14,7 +14,7 @@ test {{
 test {{ 
     inputs  {{ pc 0xffa2 a1 0 }}
 
-    outputs {{ pc 0xffa4 a1 0xFFFFFFFFEF51A000 }}
+    outputs {{ pc 0xffa6 a1 0xFFFFFFFFEF51A000 }}
     steps   {{ 1 }}
 
     lui a1, 0xEF51A
@@ -29,7 +29,7 @@ test {{
 }}
 test {{
     inputs  {{ pc 72 a1 0 }}
-    outputs {{ pc 0xffa8 a1 0xFFFFFFFFEF51A000 a2 0xFFFFFFFFEF51A468 }}
+    outputs {{ pc 80 a1 0xFFFFFFFFEF51A000 a2 0xFFFFFFFFEF51A468 }}
     steps   {{ 3 }}
 
     lui a1, 0xEF51A
@@ -38,7 +38,7 @@ test {{
 }}
 test {{
     inputs  {{ pc 72 a1 0 }}
-    outputs {{ pc 0xffa8 a1 0xFFFFFFFFFFFFF000 a2 0xFFFFFFFFFFFFF7FF }}
+    outputs {{ pc 80 a1 0xFFFFFFFFFFFFF000 a2 0xFFFFFFFFFFFFF7FF }}
     steps   {{ 3 }}
 
     lui a1, 0xFFFFF
