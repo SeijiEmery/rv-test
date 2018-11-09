@@ -36,21 +36,27 @@ def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', ver
             returncode = result.returncode
             with open(os.path.join(dir, test + '.lastrun.txt'), 'w') as f:
                 f.write(output)
+            with open(os.path.join(dir, test + '.last_debug.txt'), 'w') as f:
+                f.write(err)
         except TypeError: # python < 3.7
             infile = open(os.path.join(dir, test + '.script'), 'rb')
             outfile = open(os.path.join(dir, test + '.lastrun.txt'), 'w+')
+            errfile = open(os.path.join(dir, test + '.last_debug.txt'), 'w+')
             p = subprocess.Popen(
                 risc_v_executable,
                 stdin=infile,
                 stdout=outfile,
-                stderr=sys.stderr)
+                stderr=errfile)
             p.wait()
             returncode = p.returncode
             err = ''
             infile.close()
             outfile.close()
+            errfile.close()
             with open(os.path.join(dir, test + '.lastrun.txt'), 'r') as outfile:
                 output = outfile.read()
+            with open(os.path.join(dir, test + '.last_debug.txt'), 'r') as errfile:
+                err = errfile.read()
 
         if returncode != 0:
             print("\033[31mTest Failed: returned %s\033[0m"%returncode)
