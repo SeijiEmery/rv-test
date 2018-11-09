@@ -93,7 +93,6 @@ def gen_test_asm (asm):
 def gen_test_script (inputs, outputs, hex_file, run_cmd = 'run {iterations}', iterations=1000, entrypoint_address=0):
     return unindent('''
         load /x {entrypoint} {hex_file}
-        setpc {entrypoint}
         {register_writes}
         {run_cmd}
         {register_reads}
@@ -132,7 +131,8 @@ def assemble_file (
         riscv_ld='riscv-ld',
         riscv_objcopy='riscv-objcopy',
         od='od',
-        ld_script='riscv_sim.ld'):
+        ld_script='riscv_sim.ld',
+        **kwargs):
 
     ok, messages = True, []
     # assemble file
@@ -202,7 +202,7 @@ def generate_files_for_test (args):
         inputs=test['inputs'],
         outputs=test['outputs'],
         hex_file=filepaths['hex'],
-        run_cmd='run {iterations}')
+        run_cmd='setpc {entrypoint}\nrun {iterations}')
     write_file(filepaths['script'], results[filepaths['script']])
 
     results[filepaths['script.old']] = gen_test_script(
@@ -217,15 +217,16 @@ def generate_files_for_test (args):
     write_file(filepaths['expected.txt'], results[filepaths['expected.txt']])
     return True, test['name'], log_messages
 
-def generate_asm_tests (src_dir='tests', gen_dir='generated', verbose = False, nthreads=16, **kwargs):
+def generate_asm_tests (src_dir='tests', gen_dir='generated', verbose = False, nthreads=1, **kwargs):
+    if not os.path.exists(gen_dir):
+        os.mkdir(gen_dir)
+
     files = [
         os.path.join(src_dir, file)
         for file in os.listdir(src_dir)
         if os.path.isfile(os.path.join(src_dir, file))
         and re.search(r'\.test\.s$', os.path.join(src_dir, file))
     ]
-    test_args = []
-
     if nthreads > 1:
         pool = Pool(nthreads)
         process = lambda f, v: pool.map(f, v)
@@ -235,20 +236,32 @@ def generate_asm_tests (src_dir='tests', gen_dir='generated', verbose = False, n
     test_statuses = {}
     test_testcases = {}
     testcase_statuses = {}
-    for ok, filename, messages, testcases in process(parse_test_file, files):
-        test_statuses[filename] = ok
-        if ok:
-            test_testcases[filename] = []
-            for test in testcases:
-                test_testcases[filename].append(test['name'])
-                testcase_statuses[test['name']] = True
-                test_args.append((test, gen_dir, kwargs))
-        else:
-            print("Failed to parse '%s'"%(filename))
-            print('\t' + '\n\t'.join(messages))
+
+    def parse_testcases ():
+        for ok, filename, messages, testcases in process(parse_test_file, files):
+            test_statuses[filename] = ok
+            if ok:
+                test_testcases[filename] = []
+                for test in testcases:
+                    # check if source file exists and is up to date
+                    src_file = os.path.join(src_dir, filename+'.test.s')
+                    gen_file = os.path.join(gen_dir, test['name']+'.hex')
+                    test_testcases[filename].append(test['name'])
+                    testcase_statuses[test['name']] = True
+                    if os.path.exists(gen_file) and os.path.getmtime(gen_file) >= os.path.getmtime(src_file):
+                        # print(src_file, os.path.getmtime(src_file))
+                        # print(gen_file, os.path.getmtime(gen_file))
+                        print("skipping generation for '%s' => '%s'"%(src_file, gen_file))
+                    else:
+                        yield (test, gen_dir, kwargs)
+            else:
+                print("Failed to parse '%s'"%(filename))
+                print('\t' + '\n\t'.join(messages))
+
+    tasks = process(generate_files_for_test, parse_testcases())
 
     passed_tests = 0
-    for ok, filename, messages in process(generate_files_for_test, test_args):
+    for ok, filename, messages in tasks:
         testcase_statuses[filename] = testcase_statuses[filename] and ok
         if ok:
             print("generated '%s'"%filename)
@@ -259,7 +272,7 @@ def generate_asm_tests (src_dir='tests', gen_dir='generated', verbose = False, n
             print("Failed to generate '%s'"%filename)
             if len(messages) != 0:
                 print('\t' + '\n\t'.join(messages))
-    print("generated %d / %d testscases"%(passed_tests, len(testcase_statuses.keys())))
+    print("generated %d / %d testcases"%(passed_tests, len(testcase_statuses.keys())))
 
 if __name__ == '__main__':
     generate_asm_tests(nthreads=32)

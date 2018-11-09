@@ -4,7 +4,7 @@ import re
 import subprocess
 import sys
 import getopt
-from generate import generate_files_from_directory
+from gen_asm_tests import generate_asm_tests
 from clean import clean_generated_files
 from registers import REGISTER_TO_STR
 import difflib
@@ -20,10 +20,14 @@ def run_interactively (program_name, risc_v_exe, src_dir_path):
     print(cmd)
     subprocess.call(cmd, shell=True, stdout=sys.stdout, stderr=sys.stderr)
 
-def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', verbose_test_output = False, **kwargs):
+def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', verbose_test_output = False, using_old_framework=False, **kwargs):
     def run (test):
         print("\033[36mRunning test: '%s'\033[0m"%test)
-        with open(os.path.join(dir, test + '.script'), 'rb') as input_file:
+        if using_old_framework:
+            script_path = os.path.join(dir, test+'.script.old')
+        else:
+            script_path = os.path.join(dir, test+'.script')
+        with open(script_path, 'rb') as input_file:
             input_script = input_file.read()
         try:
             result = subprocess.run(
@@ -37,7 +41,7 @@ def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', ver
             with open(os.path.join(dir, test + '.lastrun.txt'), 'w') as f:
                 f.write(output)
         except TypeError: # python < 3.7
-            infile = open(os.path.join(dir, test + '.script'), 'rb')
+            infile = open(script_path, 'rb')
             outfile = open(os.path.join(dir, test + '.lastrun.txt'), 'w+')
             p = subprocess.Popen(
                 risc_v_executable,
@@ -136,10 +140,10 @@ def run_tests (risc_v_executable, dir = 'generated', results_dir = 'results', **
         print("\033[31m%d / %d tests passed\033[0m"%(tests_passed, tests_passed + tests_failed))
 
 def run (risc_v_exe, rebuild = True, **kwargs):
-    if rebuild:
-        clean_generated_files()
-        generate_files_from_directory(
-            'tests', 'generated', 'results', risc_v_exe, **kwargs)
+    generate_asm_tests(
+        src_dir='tests', 
+        gen_dir='generated',
+        **kwargs)
     run_tests(risc_v_exe, **kwargs)
 
 if __name__ == '__main__':
@@ -151,7 +155,7 @@ if __name__ == '__main__':
         sys.exit(0)
     try:
         generate_options = {}
-        opts, args = getopt.getopt(sys.argv[1:], 'iA:OLv', ['interactive=', 'as=', 'objcopy=', 'ld=', 'verbose='])
+        opts, args = getopt.getopt(sys.argv[1:], 'jiA:OLv', ['old', 'interactive=', 'as=', 'objcopy=', 'ld=', 'verbose=', 'parallel='])
         for opt, arg in opts:
             if opt in ('-i', '--interactive'):
                 run_interactively(sys.argv[0], args[0], 'tests')
@@ -164,6 +168,11 @@ if __name__ == '__main__':
                 generate_options['riscv_ld'] = arg
             elif opt in ('-v', '--verbose'):
                 generate_options['verbose_test_output'] = True
+                generate_options['verbose'] = True
+            elif opt in ('-j', '--parallel'):
+                generate_options['nthreads'] = int(arg)
+            elif opt in ('--old',):
+                generate_options['using_old_framework'] = True
         run(args[0], **generate_options)
         sys.exit(0)
 
