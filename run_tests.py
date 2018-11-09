@@ -67,6 +67,7 @@ def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', ver
             print(err)
             return False
 
+        raw_output = output
         output = re.sub(r'RISCV[^>]*>\s*', '', output)
         with open(os.path.join(dir, test + '.expected.txt'), 'r') as f:
             expected = f.read()
@@ -107,6 +108,8 @@ def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', ver
             if verbose_test_output:
                 print("\033[36moutput:\033[0m")
                 print(err)
+                print("\033[36mstdout:\033[0m")
+                print(raw_output)
             return True
         else:
             print("\033[36moutput:\033[0m")

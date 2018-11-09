@@ -7,8 +7,11 @@ import re
 from registers import REGISTER_MAPPINGS
 from multiprocessing import Pool
 
+DEFAULT_ITERATIONS = 1000
+DEFAULT_ENTRYPOINT = 0
+
 test_begin_regex = re.compile(r'test\s*(?:"([^"]*)")?\s*{{\s*\n')
-test_stmt_regex = re.compile(r'\s*(?:(inputs|outputs)\s*{{([^}]+)}}|(}}))\s*')
+test_stmt_regex = re.compile(r'\s*(?:(inputs|outputs|steps)\s*{{([^}]+)}}|(}}))\s*')
 register_assignment_expr_regex = re.compile(r'([a-z][a-z0-9]*)\s+(\-?(?:0x[0-9a-fA-F]+|[0-9]+))')
 
 def parse_register_assignment (statements, register_dict):
@@ -57,15 +60,22 @@ def parse_test_file (filepath):
         for i, (name, body, start_index) in enumerate(testcases):
             inputs = {}
             outputs = {}
+            steps = DEFAULT_ITERATIONS
             def parse_stmt (match):
                 # print(match)
                 if match.group(1) == 'inputs':
                     parse_register_assignment(match.group(2), inputs)
                 elif match.group(1) == 'outputs':
                     parse_register_assignment(match.group(2), outputs)
+                elif match.group(1) == 'steps':
+                    m = re.match(r'(\d+)', match.group(2).strip())
+                    if m is None:
+                        raise Exception("Invalid value for 'steps': '%s'"%m.group(2))
+                    nonlocal steps
+                    steps = int(m.group(1), 0)
+                    # print("set steps to %s"%steps)
                 return ''
             body = re.sub(test_stmt_regex, parse_stmt, body)
-
             testname = '%s.%i'%(filename, i)
             if name:
                 testname = '%s.%s'%(testname, re.sub(r'\s+', '-', name))
@@ -73,7 +83,9 @@ def parse_test_file (filepath):
                 'name': testname,
                 'asm':  body,
                 'inputs': inputs,
-                'outputs': outputs
+                'outputs': outputs,
+                'steps': steps,
+                'entrypoint': inputs['pc'] if 'pc' in inputs else DEFAULT_ENTRYPOINT
             }
     try:
         tests = list(parse_testcases(lines))
@@ -90,17 +102,17 @@ def gen_test_asm (asm):
         'ebreak'
     )
 
-def gen_test_script (inputs, outputs, hex_file, run_cmd = 'run {iterations}', iterations=1000, entrypoint_address=0):
+def gen_test_script (inputs, outputs, entrypoint, iterations, hex_file, run_cmd = 'run {iterations}'):
     return unindent('''
         load /x {entrypoint} {hex_file}
         {register_writes}
         {run_cmd}
         {register_reads}
     '''.format(
-        entrypoint = entrypoint_address,
+        entrypoint = entrypoint,
         hex_file  = hex_file,
         run_cmd   = run_cmd.format(
-            entrypoint=entrypoint_address,
+            entrypoint=entrypoint,
             iterations=iterations
         ),
         register_writes = '\n'.join([
@@ -162,7 +174,7 @@ def assemble_file (
     # dump to hex file
     with open(paths['hex'], 'w') as f:
         subprocess.call([od, '-t', 'x1', paths['bin']], stdout=f)
-        messages.append(["generated '%s'"%paths['hex']])
+        messages.append("generated '%s'"%paths['hex'])
     return ok, messages
 
 def generate_files_for_test (args):
@@ -201,6 +213,8 @@ def generate_files_for_test (args):
     results[filepaths['script']] = gen_test_script(
         inputs=test['inputs'],
         outputs=test['outputs'],
+        entrypoint=test['entrypoint'],
+        iterations=test['steps'] + 4,
         hex_file=filepaths['hex'],
         run_cmd='setpc {entrypoint}\nrun {iterations}')
     write_file(filepaths['script'], results[filepaths['script']])
@@ -208,6 +222,8 @@ def generate_files_for_test (args):
     results[filepaths['script.old']] = gen_test_script(
         inputs=test['inputs'],
         outputs=test['outputs'],
+        entrypoint=test['entrypoint'],
+        iterations=test['steps'],
         hex_file=filepaths['hex'],
         run_cmd='run {entrypoint} {iterations}')
     write_file(filepaths['script.old'], results[filepaths['script.old']])

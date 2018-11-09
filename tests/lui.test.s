@@ -28,7 +28,7 @@ test {{
     ebreak
 }}
 test {{
-    inputs  {{ pc 0xffa2 a1 0 }}
+    inputs  {{ pc 72 a1 0 }}
     outputs {{ pc 0xffa8 a1 0xFFFFFFFFEF51A000 a2 0xFFFFFFFFEF51A468 }}
     steps   {{ 3 }}
 
@@ -37,7 +37,7 @@ test {{
     ebreak
 }}
 test {{
-    inputs  {{ pc 0xffa2 a1 0 }}
+    inputs  {{ pc 72 a1 0 }}
     outputs {{ pc 0xffa8 a1 0xFFFFFFFFFFFFF000 a2 0xFFFFFFFFFFFFF7FF }}
     steps   {{ 3 }}
 
