@@ -147,16 +147,40 @@ def run (risc_v_exe, rebuild = True, **kwargs):
         **kwargs)
     run_tests(risc_v_exe, **kwargs)
 
+def display_cli_help():
+    print('\n'.join("""
+        rv-test: Automated testing for CMPE 110
+
+        usage: 
+            python3 run_tests.py [options] <path-to-your-riscv-executable>
+        
+        options: 
+            –h, --help      display this message
+            -v, --verbose   turns on extra verbosity in test output
+    
+            --clean         cleans all generated test files
+    
+            --strict        turns on strict mode: test execution will stop at the first
+                            failing test. useful if you're trying to focus on a few
+                            failing tests
+            
+            -A, --as        set the risc-v assembler (set with --as=<your-riscv-as>)
+            -L, --ld        set the risc-v linker    (set with --as=<your-riscv-ld>)
+            -O, --objcopy   set the risc-v objcopy   (set with --as=<your-riscv-objcopy>)
+            -j, --parallel  sets the # of work threads (processes) used in part of rv-test
+                            usage: -j=1  (disable multiprocessing)
+                                   -j=32 (run w/ 32 workers) 
+    
+            --old           runs with .old.script input files instead of .script files
+                            this is just so you can run the original version of miller's framework
+                            since some of the commands changed
+    """.split('\n        ')))
+
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print('usage: %s clean | [-i] <path-to-your-riscv-executable>'%sys.argv[0])
-        sys.exit(-1)
-    if len(sys.argv) == 2 and sys.argv[1] == 'clean':
-        clean_generated_files()
-        sys.exit(0)
+    
     try:
         generate_options = {}
-        opts, args = getopt.getopt(sys.argv[1:], 'jiA:OLv', ['old', 'strict', 'interactive=', 'as=', 'objcopy=', 'ld=', 'verbose=', 'parallel='])
+        opts, args = getopt.getopt(sys.argv[1:], 'hjiA:OLv', ['help', 'old', 'clean', 'strict', 'interactive=', 'as=', 'objcopy=', 'ld=', 'verbose=', 'parallel='])
         for opt, arg in opts:
             if opt in ('-i', '--interactive'):
                 run_interactively(sys.argv[0], args[0], 'tests')
@@ -176,6 +200,15 @@ if __name__ == '__main__':
                 generate_options['using_old_framework'] = True
             elif opt in ('--strict',):
                 generate_options['stop_after_failing_tests'] = True
+            elif opt in ('-h', '--help'):
+                display_cli_help()
+                sys.exit(0)
+            elif opt in ('--clean',):
+                clean_generated_files()
+                sys.exit(0)
+        if len(args) != 1:
+            print('usage: %s [opts] <path-to-your-riscv-executable>'%sys.argv[0])
+            sys.exit(-1)
         run(args[0], **generate_options)
         sys.exit(0)
 
