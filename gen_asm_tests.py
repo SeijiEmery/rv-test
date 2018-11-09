@@ -258,21 +258,56 @@ def generate_asm_tests (src_dir='tests', gen_dir='generated', verbose = False, n
                 print("Failed to parse '%s'"%(filename))
                 print('\t' + '\n\t'.join(messages))
 
-    tasks = process(generate_files_for_test, parse_testcases())
+    def generate_testcases ():
+        tasks = process(generate_files_for_test, parse_testcases())
+        passed_tests = 0
+        for ok, filename, messages in tasks:
+            testcase_statuses[filename] = testcase_statuses[filename] and ok
+            if ok:
+                print("generated '%s'"%filename)
+                if verbose and len(messages) != 0:
+                    print('\t' + '\n\t'.join(messages))
+                passed_tests += 1
+            else:
+                print("Failed to generate '%s'"%filename)
+                if len(messages) != 0:
+                    print('\t' + '\n\t'.join(messages))
+        print("generated %d / %d testcases"%(passed_tests, len(testcase_statuses.keys())))
 
-    passed_tests = 0
-    for ok, filename, messages in tasks:
-        testcase_statuses[filename] = testcase_statuses[filename] and ok
-        if ok:
-            print("generated '%s'"%filename)
-            if verbose and len(messages) != 0:
-                print('\t' + '\n\t'.join(messages))
-            passed_tests += 1
+
+    try:
+        generate_testcases()
+    except FileNotFoundError as err:
+        # check: user may not have the risc-v toolchain installed
+        # (this would be catching an error from subprocess.call()
+        #  if the binary / command we're referencing doesn't exist)
+        required_tools = [ 
+            'riscv_as',
+            'riscv_ld',
+            'riscv_objcopy',
+            'od',
+        ]
+        def has_tool(tool):
+            if tool is None:
+                return False
+            try:
+                subprocess.call([ tool, '--help' ])
+                return True
+            except FileNotFoundError:
+                return False
+        missing_tools = [
+            tool
+            for tool in required_tools
+            if tool not in kwargs or not has_tool(kwargs[tool])
+        ]
+        if len(missing_tools) > 0:
+            print("Terminating test generation: user environment is missing the following tools:\n\t"+"\n\t".join([
+                '%s: %s'%(tool, kwargs[tool] if tool in kwargs else None)
+                for tool in missing_tools
+            ]))
+            return
         else:
-            print("Failed to generate '%s'"%filename)
-            if len(messages) != 0:
-                print('\t' + '\n\t'.join(messages))
-    print("generated %d / %d testcases"%(passed_tests, len(testcase_statuses.keys())))
+            raise err
 
 if __name__ == '__main__':
     generate_asm_tests(nthreads=32)

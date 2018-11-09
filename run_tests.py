@@ -140,6 +140,7 @@ def run_tests (risc_v_executable, dir = 'generated', results_dir = 'results', st
     else:
         print("\033[31m%d / %d tests passed\033[0m"%(tests_passed, tests_passed + tests_failed))
 
+
 def run (risc_v_exe, generate=True, rebuild = True, **kwargs):
     if generate:
         generate_asm_tests(
