@@ -217,7 +217,7 @@ def generate_files_for_test (args):
     write_file(filepaths['expected.txt'], results[filepaths['expected.txt']])
     return True, test['name'], log_messages
 
-def generate_asm_tests (src_dir='tests', gen_dir='generated', verbose = False, nthreads=16, **kwargs):
+def generate_asm_tests (src_dir='tests', gen_dir='generated', verbose = False, nthreads=16, test_filters=None, **kwargs):
     if not os.path.exists(gen_dir):
         os.mkdir(gen_dir)
 
@@ -227,6 +227,16 @@ def generate_asm_tests (src_dir='tests', gen_dir='generated', verbose = False, n
         if os.path.isfile(os.path.join(src_dir, file))
         and re.search(r'\.test\.s$', os.path.join(src_dir, file))
     ]
+    if test_filters:
+        print("filtering tests to match '%s'"%', '.join(test_filters))
+        matching_files = set()
+        for test_filter in test_filters:
+            for file in files:
+                if test_filter in file:
+                    matching_files.add(file)
+        files = list(matching_files)
+        files.sort()
+
     if nthreads > 1:
         pool = Pool(nthreads)
         process = lambda f, v: pool.map(f, v)
