@@ -134,7 +134,6 @@ def run_tests (risc_v_executable, test_filters = None, dir = 'generated', result
 
     if test_filters:
         print("filtering tests to match '%s'"%', '.join(test_filters))
-        print("got tests '%s'"%', '.join(tests))
         matching_tests = set()
         for test_filter in test_filters:
             for test in tests:
