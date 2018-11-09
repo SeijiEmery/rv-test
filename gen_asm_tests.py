@@ -11,7 +11,7 @@ DEFAULT_ITERATIONS = 1000
 DEFAULT_ENTRYPOINT = 0
 
 test_begin_regex = re.compile(r'test\s*(?:"([^"]*)")?\s*{{\s*\n')
-test_stmt_regex = re.compile(r'\s*(?:(inputs|outputs|steps)\s*{{([^}]+)}}|(}}))\s*')
+test_stmt_regex = re.compile(r'\s*(?:(inputs|outputs|steps|nold)\s*{{([^}]+)}}|(}}))\s*')
 register_assignment_expr_regex = re.compile(r'([a-z][a-z0-9]*)\s+(\-?(?:0x[0-9a-fA-F]+|[0-9]+))')
 
 def parse_register_assignment (statements, register_dict):
@@ -68,6 +68,7 @@ def parse_test_file (filepath):
             inputs = {}
             outputs = {}
             steps = DEFAULT_ITERATIONS
+            nold = False
             def parse_stmt (match):
                 # print(match)
                 if match.group(1) == 'inputs':
@@ -80,6 +81,9 @@ def parse_test_file (filepath):
                         raise Exception("Invalid value for 'steps': '%s'"%m.group(2))
                     nonlocal steps
                     steps = int(m.group(1), 0)
+                elif match.group(1) == 'nold':
+                    nonlocal nold
+                    nold = True
                     # print("set steps to %s"%steps)
                 return ''
             body = re.sub(test_stmt_regex, parse_stmt, body)
@@ -92,6 +96,7 @@ def parse_test_file (filepath):
                 'inputs': inputs,
                 'outputs': outputs,
                 'steps': steps,
+                'nold': nold,
                 'entrypoint': inputs['pc'] if 'pc' in inputs else DEFAULT_ENTRYPOINT,
                 'srcpath': '%s:%d'%(filepath, find_line_num(offset))
             }
@@ -106,7 +111,7 @@ def parse_test_file (filepath):
 def gen_test_asm (asm):
     return '%s\n%s\n%s\n'%(
         asm,
-        '\n'.join(['nop'] * 5),
+        '\n'.join(['addi zero, zero, 0'] * 5),
         'ebreak'
     )
 
@@ -158,6 +163,7 @@ def assemble_file (
         riscv_objcopy='riscv-objcopy',
         od='od',
         ld_script='riscv_sim.ld',
+        nold=False,
         **kwargs):
 
     ok, messages = True, []
@@ -169,14 +175,18 @@ def assemble_file (
         '-o',
         paths['asm.o']
     ])
-    # run linker w/ custom script to fixup offsets
-    subprocess.call([
-        riscv_ld,
-        '--script=%s'%os.path.join(paths['.'], ld_script),
-        paths['asm.o'],
-        '-o',
-        paths['ld.o'],
-    ])
+    if nold:
+        paths['ld.o'] = paths['asm.o']
+        print("linker disabled")
+    else:
+        # run linker w/ custom script to fixup offsets
+        subprocess.call([
+            riscv_ld,
+            '--script=%s'%os.path.join(paths['.'], ld_script),
+            paths['asm.o'],
+            '-o',
+            paths['ld.o'],
+        ])
     # extract binary
     subprocess.call([
         riscv_objcopy,
@@ -221,7 +231,7 @@ def generate_files_for_test (args):
     write_file(filepaths['s'], results[filepaths['s']])
 
     if ok:
-        ok, msgs = assemble_file(filepaths, **kwargs)
+        ok, msgs = assemble_file(filepaths, nold=test['nold'], **kwargs)
         log_messages += msgs
 
     results[filepaths['script']] = gen_test_script(
