@@ -49,7 +49,7 @@ def parse_test_file (filepath):
         # Try matching all statements:
         matches = list(re.finditer(test_begin_regex, lines))
         testcases = [
-            (matches[i].group(1), 
+            (matches[i].group(1), matches[i].start(),
                 lines [
                     matches[i].end() : 
                     (matches[i+1].start() if i + 1 < len(matches) else -1)
@@ -57,7 +57,14 @@ def parse_test_file (filepath):
                 matches[i].end())
             for i in range(len(matches))
         ]
-        for i, (name, body, start_index) in enumerate(testcases):
+        eols = [ match.start() for match in re.finditer(r'\n', lines) ]
+        def find_line_num (offset):
+            for i, n in enumerate(eols):
+                if n >= offset:
+                    return i + 1
+            return eols[-1] + 1
+
+        for i, (name, offset, body, start_index) in enumerate(testcases):
             inputs = {}
             outputs = {}
             steps = DEFAULT_ITERATIONS
@@ -85,7 +92,8 @@ def parse_test_file (filepath):
                 'inputs': inputs,
                 'outputs': outputs,
                 'steps': steps,
-                'entrypoint': inputs['pc'] if 'pc' in inputs else DEFAULT_ENTRYPOINT
+                'entrypoint': inputs['pc'] if 'pc' in inputs else DEFAULT_ENTRYPOINT,
+                'srcpath': '%s:%d'%(filepath, find_line_num(offset))
             }
     try:
         tests = list(parse_testcases(lines))
@@ -131,8 +139,8 @@ def unindent (s):
         for line in s.strip().split('\n')
     ])
 
-def gen_test_output (outputs):
-    return '\n'.join([
+def gen_test_output (outputs, srcpath):
+    return '%s\n'%srcpath + '\n'.join([
         'R%d = %d'%(REGISTER_MAPPINGS[reg], value)
         for reg, value in outputs.items()
     ]) + '\n'
@@ -229,7 +237,8 @@ def generate_files_for_test (args):
     write_file(filepaths['script.old'], results[filepaths['script.old']])
 
     results[filepaths['expected.txt']] = gen_test_output(
-        outputs=test['outputs'])
+        outputs=test['outputs'],
+        srcpath=test['srcpath'])
     write_file(filepaths['expected.txt'], results[filepaths['expected.txt']])
     return True, test['name'], log_messages
 

@@ -22,7 +22,12 @@ def run_interactively (program_name, risc_v_exe, src_dir_path):
 
 def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', verbose_test_output = False, using_old_framework=False, **kwargs):
     def run (test):
-        print("\033[36mRunning test: '%s'\033[0m"%test)
+        with open(os.path.join(dir, test + '.expected.txt'), 'r') as f:
+            expected = f.read()
+        expected = expected.split('\n')
+        srcpath, expected = expected[0], '\n'.join(expected[1:])
+
+        print("\033[36mRunning test: '%s' %s\033[0m"%(test, srcpath))
         if using_old_framework:
             script_path = os.path.join(dir, test+'.script.old')
         else:
@@ -69,8 +74,6 @@ def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', ver
 
         raw_output = output
         output = re.sub(r'RISCV[^>]*>\s*', '', output)
-        with open(os.path.join(dir, test + '.expected.txt'), 'r') as f:
-            expected = f.read()
 
         expected_values = {}
         for match in re.finditer(r'R(\d+)\s*=\s*(-?\d+[xX]?\d*)', expected):
