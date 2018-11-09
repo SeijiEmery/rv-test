@@ -90,7 +90,7 @@ def gen_test_asm (asm):
         'ebreak'
     )
 
-def gen_test_script (inputs, outputs, hex_file, run_cmd = 'run {iterations}', iterations=1000, entrypoint_address=0):
+def gen_test_script (inputs, outputs, hex_file, run_cmd = 'run {iterations}', iterations=100000, entrypoint_address=0):
     return unindent('''
         load /x {entrypoint} {hex_file}
         {register_writes}
