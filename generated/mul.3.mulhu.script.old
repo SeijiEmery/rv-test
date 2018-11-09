@@ -1,0 +1,3 @@
+load /x 0 generated/mul.3.mulhu.hex
+
+run 0 1000

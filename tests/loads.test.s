@@ -1,9 +1,9 @@
 
 test {{
-    inputs  {{ a0 16045690984833335023 }}
+    inputs  {{ a0 0xdeadbeefdeadbeef }}
     outputs {{ 
-        a0 16045690984833335023 
-        a1 16045690984833335023
+        a0 0xdeadbeefdeadbeef 
+        a1 0xdeadbeefdeadbeef
         a2 3735928559
         a3 48879
         a4 239

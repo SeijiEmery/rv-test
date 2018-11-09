@@ -1,0 +1,8 @@
+load /x 0 generated/store.2.hex
+writereg 10 4099
+run 0 1000
+readreg 10
+readreg 11
+readreg 12
+readreg 13
+readreg 14

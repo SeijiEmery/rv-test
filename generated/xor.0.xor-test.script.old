@@ -1,0 +1,14 @@
+load /x 0 generated/xor.0.xor-test.hex
+writereg 3 0
+writereg 4 0
+writereg 5 1
+writereg 7 2147483647
+writereg 8 2147483648
+writereg 9 0
+run 0 1000
+readreg 3
+readreg 4
+readreg 5
+readreg 7
+readreg 8
+readreg 9

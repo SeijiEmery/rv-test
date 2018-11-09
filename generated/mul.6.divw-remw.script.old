@@ -1,0 +1,3 @@
+load /x 0 generated/mul.6.divw-remw.hex
+
+run 0 1000
