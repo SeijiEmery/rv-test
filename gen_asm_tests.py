@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 ''' functions for parsing a .test.s file '''
 import os
+import subprocess
 from pathlib import Path
 import re
 from registers import REGISTER_MAPPINGS
@@ -118,23 +119,63 @@ def gen_test_output (outputs):
         for reg, value in outputs.items()
     ]) + '\n'
 
+def assemble_file (
+        paths, 
+        riscv_as='riscv-as', arch='rv64im',
+        riscv_ld='riscv-ld',
+        riscv_objcopy='riscv-objcopy',
+        od='od',
+        ld_script='riscv_sim.ld'):
 
+    ok, messages = True, []
+    # assemble file
+    subprocess.call([
+        riscv_as,
+        '-march=%s'%arch,
+        paths['s'],
+        '-o',
+        paths['asm.o']
+    ])
+    # run linker w/ custom script to fixup offsets
+    subprocess.call([
+        riscv_ld,
+        '--script=%s'%os.path.join(paths['.'], ld_script),
+        paths['asm.o'],
+        '-o',
+        paths['ld.o'],
+    ])
+    # extract binary
+    subprocess.call([
+        riscv_objcopy,
+        '-O', 'binary',
+        '--only-section=.text',
+        paths['ld.o'],
+        paths['bin']
+    ])
+    # dump to hex file
+    with open(paths['hex'], 'w') as f:
+        subprocess.call([od, '-t', 'x1', paths['bin']], stdout=f)
+        messages.append(["generated '%s'"%paths['hex']])
+    return ok, messages
 
-def generate_files_for_test (test, basepath):
+def generate_files_for_test (test, basepath, **kwargs):
     make_path = lambda suffix: os.path.join(basepath, '{filename}.{suffix}'.format(
             filename=test['name'],
             suffix=suffix))
     filepaths = {
         suffix: make_path(suffix)
         for suffix in (
-            'test', 's', 'hex',
+            'test', 's',
+            'asm.o', 'ld.o', 'bin', 'hex',
             'script', 'script.old',
             'expected.txt',
             'lastrun.txt'
         )
     }
+    filepaths['.'] = os.path.abspath(os.path.join(basepath, '..'))
+
     results = {}
-    log_messages = []
+    ok, log_messages = True, []
 
     def write_file (filepath, contents):
         with open(filepath, 'w') as f:
@@ -144,6 +185,10 @@ def generate_files_for_test (test, basepath):
     results[filepaths['s']] = gen_test_asm(
         asm=test['asm'])
     write_file(filepaths['s'], results[filepaths['s']])
+
+    if ok:
+        ok, msgs = assemble_file(filepaths, **kwargs)
+        log_messages += msgs
 
     results[filepaths['script']] = gen_test_script(
         inputs=test['inputs'],
