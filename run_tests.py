@@ -85,22 +85,22 @@ def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', ver
             v2    = -((abs(value) ^ ((1 << 64) - 1)) + 1)
             if reg in expected_values:
                 if value != expected_values[reg] and v2 != expected_values[reg]:
-                    print("\033[31m%s: expected '%s',\033[0m got '%s' (%s)"%(
-                        reg, expected_values[reg], value, v2))
+                    print("\033[31m%s: expected '%s',\033[0m got '%s' (%x, %s)"%(
+                        reg, expected_values[reg], value, value, v2))
                     test_ok = False
                 elif verbose_test_output:
-                    print("\033[35m%s: got '%s' (%s)\033[0m"%(
-                        reg, value, v2))
+                    print("\033[35m%s: got '%s' (%x, %s)\033[0m"%(
+                        reg, value, value, v2))
                 del expected_values[reg]
             else:
-                print("\033[31m%s: unexpected value\033[0m '%s' (%s)"%(
-                    reg, value, v2))
+                print("\033[31m%s: unexpected value\033[0m '%s' (%x, %s)"%(
+                    reg, value, value, v2))
                 test_ok = False
 
         for reg, value in expected_values.items():
             v2 = -((abs(value) ^ ((1 << 64) - 1)) + 1)
-            print("\033[31m%s: missing, expected value\033[0m '%s' (%s)"%(
-                reg, value, v2))
+            print("\033[31m%s: missing, expected value\033[0m '%s' (%x, %s)"%(
+                reg, value, value, v2))
             test_ok = False
 
         if test_ok:
