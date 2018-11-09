@@ -5,6 +5,7 @@ import subprocess
 from pathlib import Path
 import re
 from registers import REGISTER_MAPPINGS
+from multiprocessing import Pool
 
 test_begin_regex = re.compile(r'test\s*(?:"([^"]*)")?\s*{{\s*\n')
 test_stmt_regex = re.compile(r'\s*(?:(inputs|outputs)\s*{{([^}]+)}}|(}}))\s*')
@@ -76,9 +77,9 @@ def parse_test_file (filepath):
             }
     try:
         tests = list(parse_testcases(lines))
-        return True, [], tests
+        return True, filename, [], tests
     except Exception as err:
-        return False, ["failed to parse '%s':\n\t%s"%(filepath,
+        return False, filename, ["failed to parse '%s':\n\t%s"%(filepath,
             str(err).replace('\n', '\n\t')
         )], None
 
@@ -164,7 +165,8 @@ def assemble_file (
         messages.append(["generated '%s'"%paths['hex']])
     return ok, messages
 
-def generate_files_for_test (test, basepath, **kwargs):
+def generate_files_for_test (args):
+    test, basepath, kwargs = args
     make_path = lambda suffix: os.path.join(basepath, '{filename}.{suffix}'.format(
             filename=test['name'],
             suffix=suffix))
@@ -213,30 +215,51 @@ def generate_files_for_test (test, basepath, **kwargs):
     results[filepaths['expected.txt']] = gen_test_output(
         outputs=test['outputs'])
     write_file(filepaths['expected.txt'], results[filepaths['expected.txt']])
-    return True, log_messages
+    return True, test['name'], log_messages
 
-def generate_asm_tests (src_dir='tests', gen_dir='generated', verbose = False):
-    test_messages = {}
+def generate_asm_tests (src_dir='tests', gen_dir='generated', verbose = False, nthreads=16, **kwargs):
+    files = [
+        os.path.join(src_dir, file)
+        for file in os.listdir(src_dir)
+        if os.path.isfile(os.path.join(src_dir, file))
+        and re.search(r'\.test\.s$', os.path.join(src_dir, file))
+    ]
+    test_args = []
+
+    if nthreads > 1:
+        pool = Pool(nthreads)
+        process = lambda f, v: pool.map(f, v)
+    else:
+        process = map
+
     test_statuses = {}
-    for file in os.listdir(src_dir):
-        file_path = os.path.join(src_dir, file)
-        if os.path.isfile(file_path) and re.search(r'\.test\.s$', file_path):
-            ok, msgs, tests = parse_test_file(file_path)
-            test_statuses[file_path] = [ ok ]
-            test_messages[file_path] = msgs
-            if ok:
-                for test in tests:
-                    ok, messages = generate_files_for_test(test, gen_dir)
-                    test_messages[file_path] += messages
-                    test_statuses[file_path].append(ok)
-            if all(test_statuses[file_path]):
-                print("generated '%s'"%file_path)
-                if verbose:
-                    print('\t' + '\n\t'.join(test_messages[file_path]))
-            else:
-                print("Failed to generate '%s'"%file_path)
-                print('\t' + '\n\t'.join(test_messages[file_path]))
+    test_testcases = {}
+    testcase_statuses = {}
+    for ok, filename, messages, testcases in process(parse_test_file, files):
+        test_statuses[filename] = ok
+        if ok:
+            test_testcases[filename] = []
+            for test in testcases:
+                test_testcases[filename].append(test['name'])
+                testcase_statuses[test['name']] = True
+                test_args.append((test, gen_dir, kwargs))
+        else:
+            print("Failed to parse '%s'"%(filename))
+            print('\t' + '\n\t'.join(messages))
 
+    passed_tests = 0
+    for ok, filename, messages in process(generate_files_for_test, test_args):
+        testcase_statuses[filename] = testcase_statuses[filename] and ok
+        if ok:
+            print("generated '%s'"%filename)
+            if verbose and len(messages) != 0:
+                print('\t' + '\n\t'.join(messages))
+            passed_tests += 1
+        else:
+            print("Failed to generate '%s'"%filename)
+            if len(messages) != 0:
+                print('\t' + '\n\t'.join(messages))
+    print("generated %d / %d testscases"%(passed_tests, len(testcase_statuses.keys())))
 
 if __name__ == '__main__':
-    generate_asm_tests()
+    generate_asm_tests(nthreads=32)
