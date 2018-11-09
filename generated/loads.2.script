@@ -1,7 +1,7 @@
 load /x 0 generated/loads.2.hex
 writereg 10 -7
 setpc 0
-run 100000
+run 1000
 readreg 11
 readreg 12
 readreg 13
