@@ -110,7 +110,7 @@ def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', ver
     return run
 
 
-def run_tests (risc_v_executable, dir = 'generated', results_dir = 'results', **kwargs):
+def run_tests (risc_v_executable, dir = 'generated', results_dir = 'results', stop_after_failing_tests = False, **kwargs):
     if not os.path.isdir(dir):
         os.mkdir(dir)
     if not os.path.isdir(results_dir):
@@ -132,7 +132,8 @@ def run_tests (risc_v_executable, dir = 'generated', results_dir = 'results', **
             tests_passed += 1
         else:
             tests_failed += 1
-            # return
+            if stop_after_failing_tests:
+                return
 
     if tests_failed == 0:
         print("\033[32mAll tests passed!\033[0m")
@@ -155,7 +156,7 @@ if __name__ == '__main__':
         sys.exit(0)
     try:
         generate_options = {}
-        opts, args = getopt.getopt(sys.argv[1:], 'jiA:OLv', ['old', 'interactive=', 'as=', 'objcopy=', 'ld=', 'verbose=', 'parallel='])
+        opts, args = getopt.getopt(sys.argv[1:], 'jiA:OLv', ['old', 'strict', 'interactive=', 'as=', 'objcopy=', 'ld=', 'verbose=', 'parallel='])
         for opt, arg in opts:
             if opt in ('-i', '--interactive'):
                 run_interactively(sys.argv[0], args[0], 'tests')
@@ -173,6 +174,8 @@ if __name__ == '__main__':
                 generate_options['nthreads'] = int(arg)
             elif opt in ('--old',):
                 generate_options['using_old_framework'] = True
+            elif opt in ('--strict',):
+                generate_options['stop_after_failing_tests'] = True
         run(args[0], **generate_options)
         sys.exit(0)
 

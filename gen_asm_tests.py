@@ -17,7 +17,7 @@ def parse_register_assignment (statements, register_dict):
         if name not in REGISTER_MAPPINGS:
             raise Exception("Invalid register name: '%s'"%name)
 
-        value = int(value)
+        value = int(value, 0)
         if name in register_dict:
             raise Exception("Already defined '%s' = %d; attempting to override with %d!"%(
                 name, register_dict[name], value))
