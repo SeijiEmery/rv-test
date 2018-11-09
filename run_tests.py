@@ -140,12 +140,18 @@ def run_tests (risc_v_executable, dir = 'generated', results_dir = 'results', st
     else:
         print("\033[31m%d / %d tests passed\033[0m"%(tests_passed, tests_passed + tests_failed))
 
-def run (risc_v_exe, rebuild = True, **kwargs):
-    generate_asm_tests(
-        src_dir='tests', 
-        gen_dir='generated',
-        **kwargs)
-    run_tests(risc_v_exe, **kwargs)
+def run (risc_v_exe, generate=True, rebuild = True, **kwargs):
+    if generate:
+        generate_asm_tests(
+            src_dir='tests', 
+            gen_dir='generated',
+            **kwargs)
+    else:
+        print("Test generation disabled – reusing exising tests (if present)")
+    if risc_v_exe:
+        run_tests(risc_v_exe, **kwargs)
+    else:
+        print("no risc-v executable provided, skipping test execution")
 
 def display_cli_help():
     print('\n'.join("""
@@ -157,6 +163,10 @@ def display_cli_help():
         options: 
             –h, --help      display this message
             -v, --verbose   turns on extra verbosity in test output
+
+            --nogen         turns off test generation
+                            (so you can still run the tests even if you don't have 
+                             a riscv toolchain installed)
     
             --clean         cleans all generated test files
     
@@ -176,39 +186,36 @@ def display_cli_help():
                             since some of the commands changed
     """.split('\n        ')))
 
-def main ():
+def main (**kwargs):
     try:
-        generate_options = {}
-        opts, args = getopt.getopt(sys.argv[1:], 'hjiA:OLv', ['help', 'old', 'clean', 'strict', 'interactive=', 'as=', 'objcopy=', 'ld=', 'verbose=', 'parallel='])
+        opts, args = getopt.getopt(sys.argv[1:], 'hjiA:OLv', ['help', 'old', 'nogen', 'clean', 'strict', 'interactive=', 'as=', 'objcopy=', 'ld=', 'verbose=', 'parallel='])
         for opt, arg in opts:
             if opt in ('-i', '--interactive'):
                 run_interactively(sys.argv[0], args[0], 'tests')
                 sys.exit(0)
             elif opt in ('-A', '--as'):
-                generate_options['riscv_as'] = arg
+                kwargs['riscv_as'] = arg
             elif opt in ('-O', '--objcopy'):
-                generate_options['riscv_objcopy'] = arg
+                kwargs['riscv_objcopy'] = arg
             elif opt in ('-L', '--ld'):
-                generate_options['riscv_ld'] = arg
+                kwargs['riscv_ld'] = arg
             elif opt in ('-v', '--verbose'):
-                generate_options['verbose_test_output'] = True
-                generate_options['verbose'] = True
+                kwargs['verbose_test_output'] = True
+                kwargs['verbose'] = True
             elif opt in ('-j', '--parallel'):
-                generate_options['nthreads'] = int(arg)
+                kwargs['nthreads'] = int(arg)
             elif opt in ('--old',):
-                generate_options['using_old_framework'] = True
+                kwargs['using_old_framework'] = True
             elif opt in ('--strict',):
-                generate_options['stop_after_failing_tests'] = True
+                kwargs['stop_after_failing_tests'] = True
+            elif opt in ('--nogen',):
+                kwargs['generate'] = False
             elif opt in ('-h', '--help'):
                 display_cli_help()
                 sys.exit(0)
             elif opt in ('--clean',):
                 clean_generated_files()
-                sys.exit(0)
-        if len(args) != 1:
-            print('usage: %s [opts] <path-to-your-riscv-executable>'%sys.argv[0])
-            sys.exit(-1)
-        run(args[0], **generate_options)
+        run(args[0] if len(args) > 0 else None, **kwargs)
         sys.exit(0)
     except getopt.GetoptError:
         print('usage: %s [opts] <path-to-your-riscv-executable>')
