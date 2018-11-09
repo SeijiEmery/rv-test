@@ -218,6 +218,8 @@ def display_cli_help():
                              a riscv toolchain installed)
     
             --clean         cleans all generated test files
+
+            --rebuild       cleans and regenerates all test files
     
             --strict        turns on strict mode: test execution will stop at the first
                             failing test. useful if you're trying to focus on a few
@@ -233,11 +235,16 @@ def display_cli_help():
             --old           runs with .old.script input files instead of .script files
                             this is just so you can run the original version of miller's framework
                             since some of the commands changed
+
+            --filter        sets a crappy filter (very basic substring test) to run specific tests
+                examples:
+                    --filter lui
+                    --filter lui,addi,jal
     """.split('\n        ')))
 
 def main (**kwargs):
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'hjiA:OLv', ['help', 'old', 'nogen', 'clean', 'strict', 'interactive=', 'as=', 'objcopy=', 'ld=', 'verbose=', 'parallel=', 'filter='])
+        opts, args = getopt.getopt(sys.argv[1:], 'hjiA:OLv', ['help', 'old', 'nogen', 'clean', 'rebuild', 'strict', 'interactive=', 'as=', 'objcopy=', 'ld=', 'verbose=', 'parallel=', 'filter='])
         for opt, arg in opts:
             if opt in ('-i', '--interactive'):
                 run_interactively(sys.argv[0], args[0], 'tests')
@@ -266,6 +273,10 @@ def main (**kwargs):
                 sys.exit(0)
             elif opt in ('--clean',):
                 clean_generated_files()
+                sys.exit(0)
+            elif opt in ('--rebuild',):
+                clean_generated_files()
+
         run(args[0] if len(args) > 0 else None, **kwargs)
         sys.exit(0)
     except getopt.GetoptError:

@@ -12,16 +12,16 @@ test {{
     xori a2, a1, 0x468
 }}
 test {{ 
-    inputs  {{ pc 0xffa2 a1 0 }}
+    inputs  {{ pc 0xffa4 a1 0 }}
 
-    outputs {{ pc 0xffa6 a1 0xFFFFFFFFEF51A000 }}
+    outputs {{ pc 0xffa8 a1 0xFFFFFFFFEF51A000 }}
     steps   {{ 1 }}
 
     lui a1, 0xEF51A
 }}
 test {{ 
-    inputs  {{ pc 0xffa2 a1 0 }}
-    outputs {{ pc 0xffa6 a1 0xFFFFFFFFEF51A000 }}
+    inputs  {{ pc 0xffa4 a1 0 }}
+    outputs {{ pc 0xffa8 a1 0xFFFFFFFFEF51A000 }}
     steps   {{ 2 }}
 
     lui a1, 0xEF51A
