@@ -176,8 +176,7 @@ def display_cli_help():
                             since some of the commands changed
     """.split('\n        ')))
 
-if __name__ == '__main__':
-    
+def main ():
     try:
         generate_options = {}
         opts, args = getopt.getopt(sys.argv[1:], 'hjiA:OLv', ['help', 'old', 'clean', 'strict', 'interactive=', 'as=', 'objcopy=', 'ld=', 'verbose=', 'parallel='])
@@ -211,7 +210,9 @@ if __name__ == '__main__':
             sys.exit(-1)
         run(args[0], **generate_options)
         sys.exit(0)
-
     except getopt.GetoptError:
-        print('usage: %s clean | [-i] <path-to-your-riscv-executable>')
+        print('usage: %s [opts] <path-to-your-riscv-executable>')
         sys.exit(-1)
+
+if __name__ == '__main__':
+    main()

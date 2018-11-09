@@ -217,7 +217,7 @@ def generate_files_for_test (args):
     write_file(filepaths['expected.txt'], results[filepaths['expected.txt']])
     return True, test['name'], log_messages
 
-def generate_asm_tests (src_dir='tests', gen_dir='generated', verbose = False, nthreads=1, **kwargs):
+def generate_asm_tests (src_dir='tests', gen_dir='generated', verbose = False, nthreads=16, **kwargs):
     if not os.path.exists(gen_dir):
         os.mkdir(gen_dir)
 
