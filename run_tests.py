@@ -116,7 +116,7 @@ def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', ver
     return run
 
 
-def run_tests (risc_v_executable, dir = 'generated', results_dir = 'results', stop_after_failing_tests = False, **kwargs):
+def run_tests (risc_v_executable, test_filters = None, dir = 'generated', results_dir = 'results', stop_after_failing_tests = False, **kwargs):
     if not os.path.isdir(dir):
         os.mkdir(dir)
     if not os.path.isdir(results_dir):
@@ -131,8 +131,22 @@ def run_tests (risc_v_executable, dir = 'generated', results_dir = 'results', st
         ]
         if match is not None
     ]
-    tests.sort()
-    print("Found tests: '%s'"%tests)
+
+    if test_filters:
+        print("filtering tests to match '%s'"%', '.join(test_filters))
+        print("got tests '%s'"%', '.join(tests))
+        matching_tests = set()
+        for test_filter in test_filters:
+            for test in tests:
+                if test_filter in test:
+                    matching_tests.add(test)
+        tests = list(matching_tests)
+        tests.sort()
+        print("Found matching tests: '%s'"%tests)
+    else:
+        tests.sort()
+        print("Found tests: '%s'"%tests)
+
     for test_result in map(run_test(risc_v_executable, **kwargs), tests):
         if test_result == True:
             tests_passed += 1
@@ -195,7 +209,7 @@ def display_cli_help():
 
 def main (**kwargs):
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'hjiA:OLv', ['help', 'old', 'nogen', 'clean', 'strict', 'interactive=', 'as=', 'objcopy=', 'ld=', 'verbose=', 'parallel='])
+        opts, args = getopt.getopt(sys.argv[1:], 'hjiA:OLv', ['help', 'old', 'nogen', 'clean', 'strict', 'interactive=', 'as=', 'objcopy=', 'ld=', 'verbose=', 'parallel=', 'filter='])
         for opt, arg in opts:
             if opt in ('-i', '--interactive'):
                 run_interactively(sys.argv[0], args[0], 'tests')
@@ -217,6 +231,8 @@ def main (**kwargs):
                 kwargs['stop_after_failing_tests'] = True
             elif opt in ('--nogen',):
                 kwargs['generate'] = False
+            elif opt in ('--filter',):
+                kwargs['test_filters'] = [ v.strip() for v in arg.split(',') if v.strip() ]
             elif opt in ('-h', '--help'):
                 display_cli_help()
                 sys.exit(0)
