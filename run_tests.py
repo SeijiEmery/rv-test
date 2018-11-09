@@ -4,7 +4,7 @@ import re
 import subprocess
 import sys
 import getopt
-from generate import generate_files_from_directory
+from gen_asm_tests import generate_asm_tests
 from clean import clean_generated_files
 from registers import REGISTER_TO_STR
 import difflib
@@ -20,10 +20,14 @@ def run_interactively (program_name, risc_v_exe, src_dir_path):
     print(cmd)
     subprocess.call(cmd, shell=True, stdout=sys.stdout, stderr=sys.stderr)
 
-def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', verbose_test_output = False, **kwargs):
+def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', verbose_test_output = False, using_old_framework=False, **kwargs):
     def run (test):
         print("\033[36mRunning test: '%s'\033[0m"%test)
-        with open(os.path.join(dir, test + '.script'), 'rb') as input_file:
+        if using_old_framework:
+            script_path = os.path.join(dir, test+'.script.old')
+        else:
+            script_path = os.path.join(dir, test+'.script')
+        with open(script_path, 'rb') as input_file:
             input_script = input_file.read()
         try:
             result = subprocess.run(
@@ -39,7 +43,7 @@ def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', ver
             with open(os.path.join(dir, test + '.last_debug.txt'), 'w') as f:
                 f.write(err)
         except TypeError: # python < 3.7
-            infile = open(os.path.join(dir, test + '.script'), 'rb')
+            infile = open(script_path, 'rb')
             outfile = open(os.path.join(dir, test + '.lastrun.txt'), 'w+')
             errfile = open(os.path.join(dir, test + '.last_debug.txt'), 'w+')
             p = subprocess.Popen(
@@ -112,7 +116,7 @@ def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', ver
     return run
 
 
-def run_tests (risc_v_executable, dir = 'generated', results_dir = 'results', **kwargs):
+def run_tests (risc_v_executable, dir = 'generated', results_dir = 'results', stop_after_failing_tests = False, **kwargs):
     if not os.path.isdir(dir):
         os.mkdir(dir)
     if not os.path.isdir(results_dir):
@@ -122,7 +126,7 @@ def run_tests (risc_v_executable, dir = 'generated', results_dir = 'results', **
     tests = [ 
         "%s.%s"%match.group(1, 2)
         for match in [ 
-            re.match(r'([^\.]+)\.(\d+(?:\.[^\.]+)?)\.script', filename) 
+            re.match(r'([^\.]+)\.(\d+(?:\.[^\.]+)?)\.hex', filename) 
             for filename in os.listdir(dir)
         ]
         if match is not None
@@ -134,45 +138,95 @@ def run_tests (risc_v_executable, dir = 'generated', results_dir = 'results', **
             tests_passed += 1
         else:
             tests_failed += 1
-            # return
+            if stop_after_failing_tests:
+                return
 
     if tests_failed == 0:
         print("\033[32mAll tests passed!\033[0m")
     else:
         print("\033[31m%d / %d tests passed\033[0m"%(tests_passed, tests_passed + tests_failed))
 
-def run (risc_v_exe, rebuild = True, **kwargs):
-    if rebuild:
-        clean_generated_files()
-        generate_files_from_directory(
-            'tests', 'generated', 'results', risc_v_exe, **kwargs)
-    run_tests(risc_v_exe, **kwargs)
 
-if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print('usage: %s clean | [-i] <path-to-your-riscv-executable>'%sys.argv[0])
-        sys.exit(-1)
-    if len(sys.argv) == 2 and sys.argv[1] == 'clean':
-        clean_generated_files()
-        sys.exit(0)
+def run (risc_v_exe, generate=True, rebuild = True, **kwargs):
+    if generate:
+        generate_asm_tests(
+            src_dir='tests', 
+            gen_dir='generated',
+            **kwargs)
+    else:
+        print("Test generation disabled – reusing exising tests (if present)")
+    if risc_v_exe:
+        run_tests(risc_v_exe, **kwargs)
+    else:
+        print("no risc-v executable provided, skipping test execution")
+
+def display_cli_help():
+    print('\n'.join("""
+        rv-test: Automated testing for CMPE 110
+
+        usage: 
+            python3 run_tests.py [options] <path-to-your-riscv-executable>
+        
+        options: 
+            –h, --help      display this message
+            -v, --verbose   turns on extra verbosity in test output
+
+            --nogen         turns off test generation
+                            (so you can still run the tests even if you don't have 
+                             a riscv toolchain installed)
+    
+            --clean         cleans all generated test files
+    
+            --strict        turns on strict mode: test execution will stop at the first
+                            failing test. useful if you're trying to focus on a few
+                            failing tests
+            
+            -A, --as        set the risc-v assembler (set with --as=<your-riscv-as>)
+            -L, --ld        set the risc-v linker    (set with --as=<your-riscv-ld>)
+            -O, --objcopy   set the risc-v objcopy   (set with --as=<your-riscv-objcopy>)
+            -j, --parallel  sets the # of work threads (processes) used in part of rv-test
+                            usage: -j=1  (disable multiprocessing)
+                                   -j=32 (run w/ 32 workers) 
+    
+            --old           runs with .old.script input files instead of .script files
+                            this is just so you can run the original version of miller's framework
+                            since some of the commands changed
+    """.split('\n        ')))
+
+def main (**kwargs):
     try:
-        generate_options = {}
-        opts, args = getopt.getopt(sys.argv[1:], 'iA:OLv', ['interactive=', 'as=', 'objcopy=', 'ld=', 'verbose='])
+        opts, args = getopt.getopt(sys.argv[1:], 'hjiA:OLv', ['help', 'old', 'nogen', 'clean', 'strict', 'interactive=', 'as=', 'objcopy=', 'ld=', 'verbose=', 'parallel='])
         for opt, arg in opts:
             if opt in ('-i', '--interactive'):
                 run_interactively(sys.argv[0], args[0], 'tests')
                 sys.exit(0)
             elif opt in ('-A', '--as'):
-                generate_options['riscv_as'] = arg
+                kwargs['riscv_as'] = arg
             elif opt in ('-O', '--objcopy'):
-                generate_options['riscv_objcopy'] = arg
+                kwargs['riscv_objcopy'] = arg
             elif opt in ('-L', '--ld'):
-                generate_options['riscv_ld'] = arg
+                kwargs['riscv_ld'] = arg
             elif opt in ('-v', '--verbose'):
-                generate_options['verbose_test_output'] = True
-        run(args[0], **generate_options)
+                kwargs['verbose_test_output'] = True
+                kwargs['verbose'] = True
+            elif opt in ('-j', '--parallel'):
+                kwargs['nthreads'] = int(arg)
+            elif opt in ('--old',):
+                kwargs['using_old_framework'] = True
+            elif opt in ('--strict',):
+                kwargs['stop_after_failing_tests'] = True
+            elif opt in ('--nogen',):
+                kwargs['generate'] = False
+            elif opt in ('-h', '--help'):
+                display_cli_help()
+                sys.exit(0)
+            elif opt in ('--clean',):
+                clean_generated_files()
+        run(args[0] if len(args) > 0 else None, **kwargs)
         sys.exit(0)
-
     except getopt.GetoptError:
-        print('usage: %s clean | [-i] <path-to-your-riscv-executable>')
+        print('usage: %s [opts] <path-to-your-riscv-executable>')
         sys.exit(-1)
+
+if __name__ == '__main__':
+    main()
