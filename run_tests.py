@@ -165,7 +165,7 @@ def display_cli_help():
         rv-test: Automated testing for CMPE 110
 
         usage: 
-            python3 run_tests.py [options] <path-to-your-riscv-executable>
+            python3 run_tests.py [options] <path-to-your-riscv-executable> <riscv args>
         
         options: 
             –h, --help      display this message
@@ -222,7 +222,7 @@ def main (**kwargs):
                 sys.exit(0)
             elif opt in ('--clean',):
                 clean_generated_files()
-        run(args[0] if len(args) > 0 else None, **kwargs)
+        run(args if len(args) > 0 else None, **kwargs)
         sys.exit(0)
     except getopt.GetoptError:
         print('usage: %s [opts] <path-to-your-riscv-executable>')
