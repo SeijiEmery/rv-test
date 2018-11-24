@@ -1,12 +1,12 @@
 
 test "mul mulh" {{
     inputs {{
-        a0  1 a1 -1 a2 35444612188192495 a3 -35444612188192495 a4 18446744073709551615
-        s0 -1 s1 -1 s2 35444612188192495 s3 -35444612188192495 s4 18446744073709551615
+        a0  1 a1 -1 a2 0x7decafdeadbeef a3 -0x7decafdeadbeef a4 0xffffffffffffffff
+        s0 -1 s1 -1 s2 0x7decafdeadbeef s3 -0x7decafdeadbeef s4 0xffffffffffffffff
     }}
     outputs {{
-        t0 -1 t1 1 t2 48272770088149793 t3 48272770088149793 t4 1
-        s0 0  s1 0 s2 68105272570127    s3 68105272570127    s4 18446744073709551614
+        t0 -1 t1 1 t2 0xab7fd4216da321 t3 0xab7fd4216da321 t4 1
+        s0 0  s1 0 s2 0x3df0fe94310f   s3 0x3df0fe94310f   s4 0xfffffffffffffffe
     }}
     mul  t0, a0, s0
     mulh s0, a0, s0
@@ -21,11 +21,11 @@ test "mul mulh" {{
 }}
 test "mulw" {{
     inputs {{
-        a0  1 a1 -1 a2 35444612188192495 a3 -35444612188192495
-        s0 -1 s1 -1 s2 35444612188192495 s3 -35444612188192495
+        a0  1 a1 -1 a2 0x7decafdeadbeef a3 -0x7decafdeadbeef
+        s0 -1 s1 -1 s2 0x7decafdeadbeef s3 -0x7decafdeadbeef
     }}
     outputs {{
-        t0 -1 t1 1 t2 48272770088149793 t3 48272770088149793
+        t0 -1 t1 1 t2 0xab7fd4216da321 t3 0xab7fd4216da321
     }}
     mul  t0, a0, s0
     mulh s0, a0, s0
