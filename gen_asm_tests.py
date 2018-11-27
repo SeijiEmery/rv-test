@@ -7,8 +7,11 @@ import re
 from registers import REGISTER_MAPPINGS
 from multiprocessing import Pool
 
+DEFAULT_ITERATIONS = 1000
+DEFAULT_ENTRYPOINT = 0
+
 test_begin_regex = re.compile(r'test\s*(?:"([^"]*)")?\s*{{\s*\n')
-test_stmt_regex = re.compile(r'\s*(?:(inputs|outputs)\s*{{([^}]+)}}|(}}))\s*')
+test_stmt_regex = re.compile(r'\s*(?:(inputs|outputs|steps|nold)\s*{{([^}]+)}}|(}}))\s*')
 register_assignment_expr_regex = re.compile(r'([a-z][a-z0-9]*)\s+(\-?(?:0x[0-9a-fA-F]+|[0-9]+))')
 
 def parse_register_assignment (statements, register_dict):
@@ -46,7 +49,7 @@ def parse_test_file (filepath):
         # Try matching all statements:
         matches = list(re.finditer(test_begin_regex, lines))
         testcases = [
-            (matches[i].group(1), 
+            (matches[i].group(1), matches[i].start(),
                 lines [
                     matches[i].end() : 
                     (matches[i+1].start() if i + 1 < len(matches) else -1)
@@ -54,18 +57,36 @@ def parse_test_file (filepath):
                 matches[i].end())
             for i in range(len(matches))
         ]
-        for i, (name, body, start_index) in enumerate(testcases):
+        eols = [ match.start() for match in re.finditer(r'\n', lines) ]
+        def find_line_num (offset):
+            for i, n in enumerate(eols):
+                if n >= offset:
+                    return i + 1
+            return eols[-1] + 1
+
+        for i, (name, offset, body, start_index) in enumerate(testcases):
             inputs = {}
             outputs = {}
+            steps = DEFAULT_ITERATIONS
+            nold = False
             def parse_stmt (match):
                 # print(match)
                 if match.group(1) == 'inputs':
                     parse_register_assignment(match.group(2), inputs)
                 elif match.group(1) == 'outputs':
                     parse_register_assignment(match.group(2), outputs)
+                elif match.group(1) == 'steps':
+                    m = re.match(r'(\d+)', match.group(2).strip())
+                    if m is None:
+                        raise Exception("Invalid value for 'steps': '%s'"%m.group(2))
+                    nonlocal steps
+                    steps = int(m.group(1), 0)
+                elif match.group(1) == 'nold':
+                    nonlocal nold
+                    nold = True
+                    # print("set steps to %s"%steps)
                 return ''
             body = re.sub(test_stmt_regex, parse_stmt, body)
-
             testname = '%s.%i'%(filename, i)
             if name:
                 testname = '%s.%s'%(testname, re.sub(r'\s+', '-', name))
@@ -73,7 +94,11 @@ def parse_test_file (filepath):
                 'name': testname,
                 'asm':  body,
                 'inputs': inputs,
-                'outputs': outputs
+                'outputs': outputs,
+                'steps': steps,
+                'nold': nold,
+                'entrypoint': inputs['pc'] if 'pc' in inputs else DEFAULT_ENTRYPOINT,
+                'srcpath': '%s:%d'%(filepath, find_line_num(offset))
             }
     try:
         tests = list(parse_testcases(lines))
@@ -86,21 +111,22 @@ def parse_test_file (filepath):
 def gen_test_asm (asm):
     return '%s\n%s\n%s\n'%(
         asm,
-        '\n'.join(['nop'] * 5),
+        '\n'.join(['addi zero, zero, 0'] * 5),
         'ebreak'
     )
 
-def gen_test_script (inputs, outputs, hex_file, run_cmd = 'run {iterations}', iterations=100000, entrypoint_address=0):
+
+def gen_test_script (inputs, outputs, entrypoint, iterations, hex_file, run_cmd = 'run {iterations}'):
     return unindent('''
         load /x {entrypoint} {hex_file}
         {register_writes}
         {run_cmd}
         {register_reads}
     '''.format(
-        entrypoint = entrypoint_address,
+        entrypoint = entrypoint,
         hex_file  = hex_file,
         run_cmd   = run_cmd.format(
-            entrypoint=entrypoint_address,
+            entrypoint=entrypoint,
             iterations=iterations
         ),
         register_writes = '\n'.join([
@@ -119,8 +145,14 @@ def unindent (s):
         for line in s.strip().split('\n')
     ])
 
-def gen_test_output (outputs):
-    return '\n'.join([
+def gen_test_output (outputs, srcpath):
+    if 'pc' in outputs:
+        pc_value = 'pc = %d\n'%outputs['pc']
+        del outputs['pc']
+    else:
+        pc_value = ''
+
+    return '%s\n'%srcpath + pc_value + '\n'.join([
         'R%d = %d'%(REGISTER_MAPPINGS[reg], value)
         for reg, value in outputs.items()
     ]) + '\n'
@@ -132,6 +164,7 @@ def assemble_file (
         riscv_objcopy='riscv-objcopy',
         od='od',
         ld_script='riscv_sim.ld',
+        nold=False,
         **kwargs):
 
     ok, messages = True, []
@@ -143,14 +176,18 @@ def assemble_file (
         '-o',
         paths['asm.o']
     ])
-    # run linker w/ custom script to fixup offsets
-    subprocess.call([
-        riscv_ld,
-        '--script=%s'%os.path.join(paths['.'], ld_script),
-        paths['asm.o'],
-        '-o',
-        paths['ld.o'],
-    ])
+    if nold:
+        paths['ld.o'] = paths['asm.o']
+        print("linker disabled")
+    else:
+        # run linker w/ custom script to fixup offsets
+        subprocess.call([
+            riscv_ld,
+            '--script=%s'%os.path.join(paths['.'], ld_script),
+            paths['asm.o'],
+            '-o',
+            paths['ld.o'],
+        ])
     # extract binary
     subprocess.call([
         riscv_objcopy,
@@ -162,7 +199,7 @@ def assemble_file (
     # dump to hex file
     with open(paths['hex'], 'w') as f:
         subprocess.call([od, '-t', 'x1', paths['bin']], stdout=f)
-        messages.append(["generated '%s'"%paths['hex']])
+        messages.append("generated '%s'"%paths['hex'])
     return ok, messages
 
 def generate_files_for_test (args):
@@ -195,12 +232,14 @@ def generate_files_for_test (args):
     write_file(filepaths['s'], results[filepaths['s']])
 
     if ok:
-        ok, msgs = assemble_file(filepaths, **kwargs)
+        ok, msgs = assemble_file(filepaths, nold=test['nold'], **kwargs)
         log_messages += msgs
 
     results[filepaths['script']] = gen_test_script(
         inputs=test['inputs'],
         outputs=test['outputs'],
+        entrypoint=test['entrypoint'],
+        iterations=test['steps'] + 4,
         hex_file=filepaths['hex'],
         run_cmd='setpc {entrypoint}\nrun {iterations}')
     write_file(filepaths['script'], results[filepaths['script']])
@@ -208,16 +247,19 @@ def generate_files_for_test (args):
     results[filepaths['script.old']] = gen_test_script(
         inputs=test['inputs'],
         outputs=test['outputs'],
+        entrypoint=test['entrypoint'],
+        iterations=test['steps'],
         hex_file=filepaths['hex'],
         run_cmd='run {entrypoint} {iterations}')
     write_file(filepaths['script.old'], results[filepaths['script.old']])
 
     results[filepaths['expected.txt']] = gen_test_output(
-        outputs=test['outputs'])
+        outputs=test['outputs'],
+        srcpath=test['srcpath'])
     write_file(filepaths['expected.txt'], results[filepaths['expected.txt']])
     return True, test['name'], log_messages
 
-def generate_asm_tests (src_dir='tests', gen_dir='generated', verbose = False, nthreads=16, **kwargs):
+def generate_asm_tests (src_dir='tests', gen_dir='generated', verbose = False, nthreads=16, test_filters=None, **kwargs):
     if not os.path.exists(gen_dir):
         os.mkdir(gen_dir)
 
@@ -227,6 +269,16 @@ def generate_asm_tests (src_dir='tests', gen_dir='generated', verbose = False, n
         if os.path.isfile(os.path.join(src_dir, file))
         and re.search(r'\.test\.s$', os.path.join(src_dir, file))
     ]
+    if test_filters:
+        print("filtering tests to match '%s'"%', '.join(test_filters))
+        matching_files = set()
+        for test_filter in test_filters:
+            for file in files:
+                if test_filter in file:
+                    matching_files.add(file)
+        files = list(matching_files)
+        files.sort()
+
     if nthreads > 1:
         pool = Pool(nthreads)
         process = lambda f, v: pool.map(f, v)
