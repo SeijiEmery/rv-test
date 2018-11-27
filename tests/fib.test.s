@@ -31,5 +31,4 @@ return:
     jalr    x0, 0(ra)
 
 end:
-    ebreak
 }}

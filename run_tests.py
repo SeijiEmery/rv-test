@@ -22,7 +22,12 @@ def run_interactively (program_name, risc_v_exe, src_dir_path):
 
 def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', verbose_test_output = False, using_old_framework=False, **kwargs):
     def run (test):
-        print("\033[36mRunning test: '%s'\033[0m"%test)
+        with open(os.path.join(dir, test + '.expected.txt'), 'r') as f:
+            expected = f.read()
+        expected = expected.split('\n')
+        srcpath, expected = expected[0], '\n'.join(expected[1:])
+
+        print("\033[36mRunning test: '%s' %s\033[0m"%(test, srcpath))
         if using_old_framework:
             script_path = os.path.join(dir, test+'.script.old')
         else:
@@ -67,14 +72,17 @@ def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', ver
             print(err)
             return False
 
+        raw_output = output
         output = re.sub(r'RISCV[^>]*>\s*', '', output)
-        with open(os.path.join(dir, test + '.expected.txt'), 'r') as f:
-            expected = f.read()
 
         expected_values = {}
-        for match in re.finditer(r'R(\d+)\s*=\s*(-?\d+[xX]?\d*)', expected):
+        expected_pc = None
+        for match in re.finditer(r'(R\d+|pc)\s*=\s*(-?\d+[xX]?\d*)', expected):
             reg, value = match.group(1, 2)
-            expected_values[REGISTER_TO_STR[int(reg)]] = int(value)
+            if reg[0] == 'R':
+                expected_values[REGISTER_TO_STR[int(reg[1:])]] = int(value, 0)
+            elif reg == 'pc':
+                expected_pc = int(value, 0)
 
         test_ok = True
         for match in re.finditer(r'R(\d+)\s*=\s*(-?\d+[xX]?\d*)', output):
@@ -84,22 +92,34 @@ def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', ver
             v2    = -((abs(value) ^ ((1 << 64) - 1)) + 1)
             if reg in expected_values:
                 if value != expected_values[reg] and v2 != expected_values[reg]:
-                    print("\033[31m%s: expected '%s',\033[0m got '%s' (%s)"%(
-                        reg, expected_values[reg], value, v2))
+                    print("\033[31m%s: expected '%s',\033[0m got '%s' (%x, %s)"%(
+                        reg, expected_values[reg], value, value, v2))
                     test_ok = False
                 elif verbose_test_output:
-                    print("\033[35m%s: got '%s' (%s)\033[0m"%(
-                        reg, value, v2))
+                    print("\033[35m%s: got '%s' (%x, %s)\033[0m"%(
+                        reg, value, value, v2))
                 del expected_values[reg]
             else:
-                print("\033[31m%s: unexpected value\033[0m '%s' (%s)"%(
-                    reg, value, v2))
+                print("\033[31m%s: unexpected value\033[0m '%s' (%x, %s)"%(
+                    reg, value, value, v2))
+                test_ok = False
+
+        if expected_pc:
+            last_pc = None
+            for match in re.finditer(r'\(PC=(0x[A-Za-z0-9]+)\)', raw_output):
+                last_pc = int(match.group(1),0)
+            if last_pc is None:
+                raise Exception("Failed to match (PC=0x...) in output '%s'"%raw_output)
+            if last_pc != expected_pc:
+                print("\033[31mexpected pc = '%s', got '%s'\033[0m"%(
+                    hex(expected_pc) if expected_pc is not None else expected_pc,
+                    hex(last_pc) if last_pc is not None else last_pc))
                 test_ok = False
 
         for reg, value in expected_values.items():
             v2 = -((abs(value) ^ ((1 << 64) - 1)) + 1)
-            print("\033[31m%s: missing, expected value\033[0m '%s' (%s)"%(
-                reg, value, v2))
+            print("\033[31m%s: missing, expected value\033[0m '%s' (%x, %s)"%(
+                reg, value, value, v2))
             test_ok = False
 
         if test_ok:
@@ -107,16 +127,25 @@ def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', ver
             if verbose_test_output:
                 print("\033[36moutput:\033[0m")
                 print(err)
+                print("\033[36mstdout:\033[0m")
+                print(raw_output)
+                print("\033[36mexpected:\033[0m")
+                print(expected)
             return True
         else:
+            print("\033[31mTest Failed\033[0m")
             print("\033[36moutput:\033[0m")
             print(err)
-            print("\033[31mTest Failed\033[0m")
+            if verbose_test_output:
+                print("\033[36mstdout:\033[0m")
+                print(raw_output)
+                print("\033[36mexpected:\033[0m")
+                print(expected)
             return False
     return run
 
 
-def run_tests (risc_v_executable, dir = 'generated', results_dir = 'results', stop_after_failing_tests = False, **kwargs):
+def run_tests (risc_v_executable, test_filters = None, dir = 'generated', results_dir = 'results', stop_after_failing_tests = False, **kwargs):
     if not os.path.isdir(dir):
         os.mkdir(dir)
     if not os.path.isdir(results_dir):
@@ -131,8 +160,21 @@ def run_tests (risc_v_executable, dir = 'generated', results_dir = 'results', st
         ]
         if match is not None
     ]
-    tests.sort()
-    print("Found tests: '%s'"%tests)
+
+    if test_filters:
+        print("filtering tests to match '%s'"%', '.join(test_filters))
+        matching_tests = set()
+        for test_filter in test_filters:
+            for test in tests:
+                if test_filter in test:
+                    matching_tests.add(test)
+        tests = list(matching_tests)
+        tests.sort()
+        print("Found matching tests: '%s'"%tests)
+    else:
+        tests.sort()
+        print("Found tests: '%s'"%tests)
+
     for test_result in map(run_test(risc_v_executable, **kwargs), tests):
         if test_result == True:
             tests_passed += 1
@@ -165,7 +207,7 @@ def display_cli_help():
         rv-test: Automated testing for CMPE 110
 
         usage: 
-            python3 run_tests.py [options] <path-to-your-riscv-executable>
+            python3 run_tests.py [options] <path-to-your-riscv-executable> <riscv args>
         
         options: 
             –h, --help      display this message
@@ -176,6 +218,8 @@ def display_cli_help():
                              a riscv toolchain installed)
     
             --clean         cleans all generated test files
+
+            --rebuild       cleans and regenerates all test files
     
             --strict        turns on strict mode: test execution will stop at the first
                             failing test. useful if you're trying to focus on a few
@@ -191,11 +235,16 @@ def display_cli_help():
             --old           runs with .old.script input files instead of .script files
                             this is just so you can run the original version of miller's framework
                             since some of the commands changed
+
+            --filter        sets a crappy filter (very basic substring test) to run specific tests
+                examples:
+                    --filter lui
+                    --filter lui,addi,jal
     """.split('\n        ')))
 
 def main (**kwargs):
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'hjiA:OLv', ['help', 'old', 'nogen', 'clean', 'strict', 'interactive=', 'as=', 'objcopy=', 'ld=', 'verbose=', 'parallel='])
+        opts, args = getopt.getopt(sys.argv[1:], 'hjiA:OLv', ['help', 'old', 'nogen', 'clean', 'rebuild', 'strict', 'interactive=', 'as=', 'objcopy=', 'ld=', 'verbose=', 'parallel=', 'filter='])
         for opt, arg in opts:
             if opt in ('-i', '--interactive'):
                 run_interactively(sys.argv[0], args[0], 'tests')
@@ -217,12 +266,17 @@ def main (**kwargs):
                 kwargs['stop_after_failing_tests'] = True
             elif opt in ('--nogen',):
                 kwargs['generate'] = False
+            elif opt in ('--filter',):
+                kwargs['test_filters'] = [ v.strip() for v in arg.split(',') if v.strip() ]
             elif opt in ('-h', '--help'):
                 display_cli_help()
                 sys.exit(0)
             elif opt in ('--clean',):
                 clean_generated_files()
-        run(args[0] if len(args) > 0 else None, **kwargs)
+                sys.exit(0)
+            elif opt in ('--rebuild',):
+                clean_generated_files()
+        run(args if len(args) > 0 else None, **kwargs)
         sys.exit(0)
     except getopt.GetoptError:
         print('usage: %s [opts] <path-to-your-riscv-executable>')

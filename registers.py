@@ -3,6 +3,7 @@
 
 # Register mappings + stringification
 registers = [
+    [('pc', -1)] +
     [('x%d'%i, i) for i in range(0, 31+1) ] +
     [('zero', 0), ('ra', 1), ('sp', 2), ('gp', 3), ('tp', 4)] +
     [('a%d'%i, i + 10) for i in range(0, 7+1)] +
@@ -43,3 +44,7 @@ assert([ REGISTER_TO_STR[reg] for reg in range(32) ] == [
     # 24    25    26    27     28    29    30    31 
     's8', 's9', 's10', 's11', 't3', 't4', 't5', 't6' 
 ])
+
+if __name__ == '__main__':
+    print(REGISTER_MAPPINGS)
+    print(REGISTER_TO_STR)

@@ -65,6 +65,17 @@ l3:
 l4:
 }}
 
+test "bne_redux" {{
+    inputs {{ a0 -10 a2 -20 t3 103 }}
+    outputs {{ a0 -10 a2 -20 t3 103 }}
+
+    bne a0, a2, l3
+    addi t3, zero, 33
+    bne a0, a2, l3
+    addi t3, zero, 33
+l3:
+}}
+
 test "bge 10 >= 12" {{
     inputs  {{ a0 10 a1 12 t1 1 }}
     outputs {{ a0 10 a1 12 t1 0 }}

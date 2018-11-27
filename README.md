@@ -13,8 +13,7 @@ To install:
 	
 To run:
 	
-	./run_tests.py <path-to-your-risc-v-executable>
-	cat results/*.diff
+	./run_tests.py <args...> [<path-to-your-risc-v-executable>]
 	
 To clean:
 
@@ -23,14 +22,31 @@ To clean:
 or
 
 	./clean.py
-	
-To run interactively:
 
-	./run_tests.py -i <path-to-your-risc-v-executable>
+### Commandline arguments:
 	
-Note: this last mode means that the program will just use when-changed to re-run itself whenever any of the source files in tests/ are changed. You need to have when-changed - get it here: <https://github.com/joh/when-changed>
+	--help 			(prints CLI argument options)
+	-v, --verbose 	(prints more stuff)
+	-j, --parallel 	(sets # threads used for generation phase)
+	-old 			(runs against the framework version from PA1)
+	--strict 		(stops after first failing test)
+	--nogen 		(disables generation - use if you don't have the riscv toolchain installed)
+	--filter <name> (generates / runs only tests whose name matches a simple substring filter)
+					eg. --filter mul
+	--rebuild 		(cleans and rebuilds all generated files)
+	--clean 		(removes all generated files)
 
-Note 2: do not use this command as it currently is extremely broken.
+	-A, --as		(sets the risc-v assembler (default: `riscv-as`))
+	-L, --ld 		(sets the risc-v linker (default: `riscv-ld`))
+	-O, --objcopy 	(sets the risc-v objcopy (default: `riscv-objcopy`))
+
+### What this does:
+
+run_tests.py will by default rebuild all the testcases (tests/\*.test.s) that are out of date, and will run said tests if a risc-v executable is provided. To rebuild all tests, use `--rebuild`. To NOT rebuild any tests, use `--nogen`.
+
+Test generation will ONLY work if you have the risc-v toolchain installed.
+
+If you do not, you can use the `prebuilt` branch, which should work by default unless you modify any of the tests/\*.test.s files. If you do, use `git reset --hard`.
 
 ## Test files
 
