@@ -1,3 +1,4 @@
+tests/loads.test.s:25
 R11 = 10
 R12 = 10
 R13 = 10

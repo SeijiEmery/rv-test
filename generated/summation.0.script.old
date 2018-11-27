@@ -1,0 +1,5 @@
+load /x 0 generated/summation.0.hex
+writereg 10 1000
+run 0 1000
+readreg 10
+readreg 8

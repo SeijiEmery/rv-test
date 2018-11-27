@@ -1,5 +1,5 @@
 load /x 0 generated/branching.1.j.hex
 writereg 6 22
 setpc 0
-run 100000
+run 1004
 readreg 6

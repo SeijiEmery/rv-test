@@ -1,3 +1,4 @@
+tests/store.test.s:23
 R10 = 255
 R11 = 255
 R12 = 255

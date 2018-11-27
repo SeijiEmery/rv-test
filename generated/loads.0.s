@@ -7,9 +7,9 @@ addi gp, zero, 200
     lw a5,  0(gp)
     lh a6,  0(gp)
     lb a7,  0(gp)
-nop
-nop
-nop
-nop
-nop
+addi zero, zero, 0
+addi zero, zero, 0
+addi zero, zero, 0
+addi zero, zero, 0
+addi zero, zero, 0
 ebreak

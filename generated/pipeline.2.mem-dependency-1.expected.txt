@@ -1,0 +1,5 @@
+tests/pipeline.test.s:22
+R8 = 1000
+R9 = 2048
+R18 = 1000
+R19 = 2000

@@ -1,0 +1,3 @@
+tests/summation.test.s:2
+R10 = 0
+R8 = 500500

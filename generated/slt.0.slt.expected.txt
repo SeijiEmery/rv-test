@@ -1,3 +1,4 @@
+tests/slt.test.s:1
 R2 = 0
 R3 = 0
 R4 = 1

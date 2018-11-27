@@ -5,7 +5,7 @@ writereg 5 0
 writereg 6 0
 writereg 7 0
 setpc 0
-run 100000
+run 1004
 readreg 3
 readreg 4
 readreg 5

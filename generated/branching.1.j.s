@@ -1,10 +1,10 @@
 j l1
-addi t1, t1, 50
+    addi t1, t1, 50
 l1:
-addi t1, t1, -10
-nop
-nop
-nop
-nop
-nop
+    addi t1, t1, -10
+addi zero, zero, 0
+addi zero, zero, 0
+addi zero, zero, 0
+addi zero, zero, 0
+addi zero, zero, 0
 ebreak

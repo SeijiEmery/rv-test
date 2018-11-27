@@ -1,0 +1,6 @@
+load /x 1049856 generated/jal.1.hex
+writereg -1 1049856
+writereg 1 0
+run 1049856 1
+readreg -1
+readreg 1

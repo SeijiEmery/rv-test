@@ -1,7 +1,7 @@
 load /x 0 generated/store.1.hex
 writereg 10 255
 setpc 0
-run 100000
+run 1004
 readreg 10
 readreg 11
 readreg 12

@@ -1,0 +1,12 @@
+load /x 0 generated/pipeline.4.alu-mem-dependency-1.hex
+writereg 8 420
+writereg 9 3072
+writereg 18 0
+writereg 19 69
+writereg 20 0
+run 0 1000
+readreg 8
+readreg 9
+readreg 18
+readreg 19
+readreg 20

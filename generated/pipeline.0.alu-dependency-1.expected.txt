@@ -1,0 +1,4 @@
+tests/pipeline.test.s:1
+R8 = 10
+R9 = 50
+R18 = 40

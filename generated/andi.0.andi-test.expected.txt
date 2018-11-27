@@ -1,3 +1,4 @@
+tests/andi.test.s:2
 R3 = 0
 R4 = 0
 R5 = 0

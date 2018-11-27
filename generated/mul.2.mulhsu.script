@@ -1,4 +1,4 @@
 load /x 0 generated/mul.2.mulhsu.hex
 
 setpc 0
-run 100000
+run 1004

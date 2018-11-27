@@ -12,7 +12,7 @@ writereg 19 -1010013
 writereg 20 12090182091
 writereg 21 0
 setpc 0
-run 100000
+run 1004
 readreg 5
 readreg 6
 readreg 7

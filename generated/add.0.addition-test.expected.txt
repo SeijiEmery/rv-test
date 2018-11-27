@@ -1,3 +1,4 @@
+tests/add.test.s:2
 R1 = 3
 R2 = 2
 R3 = 3

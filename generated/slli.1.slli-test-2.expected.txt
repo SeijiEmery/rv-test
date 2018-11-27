@@ -1,3 +1,4 @@
+tests/slli.test.s:11
 R1 = 1792
 R2 = 256
 R3 = 262144

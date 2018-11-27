@@ -2,6 +2,6 @@ load /x 0 generated/sra.4.srai-test-4.hex
 writereg 1 1
 writereg 2 63
 setpc 0
-run 100000
+run 1004
 readreg 1
 readreg 2

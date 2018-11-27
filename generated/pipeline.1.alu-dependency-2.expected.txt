@@ -1,0 +1,7 @@
+tests/pipeline.test.s:10
+R8 = 0
+R9 = 10
+R18 = 30
+R19 = 60
+R20 = 100
+R21 = 150

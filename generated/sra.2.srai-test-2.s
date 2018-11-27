@@ -1,7 +1,7 @@
 srai x1, x1, 1
-nop
-nop
-nop
-nop
-nop
+addi zero, zero, 0
+addi zero, zero, 0
+addi zero, zero, 0
+addi zero, zero, 0
+addi zero, zero, 0
 ebreak

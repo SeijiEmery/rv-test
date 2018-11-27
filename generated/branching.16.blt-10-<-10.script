@@ -1,9 +1,0 @@
-load /x 0 generated/branching.16.blt-10-<-10.hex
-writereg 10 10
-writereg 11 10
-writereg 6 1
-setpc 0
-run 100000
-readreg 10
-readreg 11
-readreg 6

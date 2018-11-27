@@ -1,8 +1,8 @@
 sll x1, x1, x2
-sra x1, x1, x2
-nop
-nop
-nop
-nop
-nop
+	sra x1, x1, x2
+addi zero, zero, 0
+addi zero, zero, 0
+addi zero, zero, 0
+addi zero, zero, 0
+addi zero, zero, 0
 ebreak

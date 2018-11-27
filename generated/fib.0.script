@@ -2,6 +2,6 @@ load /x 0 generated/fib.0.hex
 writereg 2 4096
 writereg 10 10
 setpc 0
-run 100000
+run 1004
 readreg 2
 readreg 10

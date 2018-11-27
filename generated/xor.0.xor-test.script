@@ -6,7 +6,7 @@ writereg 7 2147483647
 writereg 8 2147483648
 writereg 9 0
 setpc 0
-run 100000
+run 1004
 readreg 3
 readreg 4
 readreg 5

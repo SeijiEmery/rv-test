@@ -1,0 +1,5 @@
+load /x 0 generated/lui.1.hex
+
+run 0 2
+readreg 11
+readreg 12

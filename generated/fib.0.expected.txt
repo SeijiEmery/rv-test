@@ -1,2 +1,3 @@
+tests/fib.test.s:2
 R2 = 4096
 R10 = 55
