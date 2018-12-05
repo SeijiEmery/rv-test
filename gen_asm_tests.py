@@ -7,7 +7,7 @@ import re
 from registers import REGISTER_MAPPINGS
 from multiprocessing import Pool
 
-DEFAULT_ITERATIONS = 1000
+DEFAULT_ITERATIONS = 100000
 DEFAULT_ENTRYPOINT = 0
 
 test_begin_regex = re.compile(r'test\s*(?:"([^"]*)")?\s*{{\s*\n')
