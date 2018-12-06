@@ -187,6 +187,9 @@ def run_tests (risc_v_executable, test_filters = None, dir = 'generated', result
 
 
 def run (risc_v_exe, generate=True, rebuild = True, **kwargs):
+    if subprocess.call(['make', '-C', 'page_tables']) != 0:
+        sys.exit(1)
+
     if generate:
         generate_asm_tests(
             src_dir='tests', 
@@ -290,4 +293,4 @@ def main (**kwargs):
         sys.exit(-1)
 
 if __name__ == '__main__':
-    main(version='pa4', vm_entrypoint=0, pc_real_address_0=4*1024*1024, vm_file='vm_pages.hex')
+    main(version='pa4', vm_entrypoint=0, pc_real_address_0=4*1024*1024, vm_file='page_tables/page_table.hex')
