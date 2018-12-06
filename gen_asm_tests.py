@@ -7,6 +7,8 @@ import re
 from registers import REGISTER_MAPPINGS
 from multiprocessing import Pool
 
+VM_BINARY_START_HW_ADDR = 1 * 1024 * 1024
+VM_BINARY_START_SW_ADDR = 1 * 1024 * 1024
 DEFAULT_ITERATIONS = 100000
 DEFAULT_ENTRYPOINT = 0
 
@@ -18,7 +20,8 @@ def parse_register_assignment (statements, register_dict):
     def parse_and_execute_assignment (match):
         name, value = match.group(1, 2)
         if name not in REGISTER_MAPPINGS:
-            raise Exception("Invalid register name: '%s'"%name)
+            raise Except 
+            ion("Invalid register name: '%s'"%name)
 
         value = int(value, 0)
         if name in register_dict:
@@ -115,29 +118,49 @@ def gen_test_asm (asm):
         'ebreak'
     )
 
-
-def gen_test_script (inputs, outputs, entrypoint, iterations, hex_file, run_cmd = 'run {iterations}'):
-    return unindent('''
-        load /x {entrypoint} {hex_file}
-        {register_writes}
-        {run_cmd}
-        {register_reads}
-    '''.format(
-        entrypoint = entrypoint,
-        hex_file  = hex_file,
-        run_cmd   = run_cmd.format(
-            entrypoint=entrypoint,
-            iterations=iterations
-        ),
-        register_writes = '\n'.join([
+def gen_test_script (inputs, outputs, entrypoint, iterations, hex_file, version, vm_entrypoint=None, vm_file=None):
+    if version == 'pa4':
+        script = unindent('''
+            load /x {vm_entrypoint} {vm_file}
+            load /x {entrypoint} {hex_file}
+            setptbr {vm_entrypoint}
+            setpc {entrypoint}
+            {register_writes}
+            run {iterations}
+            getcycles
+            memorystats
+            {register_reads}
+        ''')
+    elif version in ('pa3','pa1'):
+        script = unindent('''
+            load /x {entrypoint} {hex_file}
+            setpc {entrypoint}
+            {register_writes}
+            run {iterations}
+            {register_reads}
+        ''')
+    else:
+        script = unindent('''
+            load /x {entrypoint} {hex_file}
+            {register_writes}
+            run {entrypoint} {iterations}
+            {register_reads}
+        ''')
+    return script.format(
+        entrypoint=entrypoint,
+        hex_file=hex_file,
+        vm_entrypoint=vm_entrypoint,
+        vm_file=vm_file,
+        iterations=iterations,
+        register_writes='\n'.join([
             'writereg %d %d'%(REGISTER_MAPPINGS[reg], value)
             for reg, value in inputs.items()
         ]),
-        register_reads = '\n'.join([
+        register_reads='\n'.join([
             'readreg %d'%(REGISTER_MAPPINGS[reg])
             for reg, _ in outputs.items()
         ])
-    ))
+    )
 
 def unindent (s):
     return '\n'.join([ 
@@ -165,6 +188,7 @@ def assemble_file (
         od='od',
         ld_script='riscv_sim.ld',
         nold=False,
+        version=None,
         **kwargs):
 
     ok, messages = True, []
@@ -212,7 +236,7 @@ def generate_files_for_test (args):
         for suffix in (
             'test', 's',
             'asm.o', 'ld.o', 'bin', 'hex',
-            'script', 'script.old',
+            'script.pa4', 'script.pa3', 'script.pa1',
             'expected.txt',
             'lastrun.txt'
         )
@@ -235,23 +259,35 @@ def generate_files_for_test (args):
         ok, msgs = assemble_file(filepaths, nold=test['nold'], **kwargs)
         log_messages += msgs
 
-    results[filepaths['script']] = gen_test_script(
+    results[filepaths['script.pa4']] = gen_test_script(
+        version='pa4',
+        inputs=test['inputs'],
+        outputs=test['outputs'],
+        entrypoint=test['entrypoint'] + kwargs['pc_real_address_0'],
+        iterations=test['steps'] + 4,
+        vm_entrypoint=kwargs['vm_entrypoint'],
+        vm_file=kwargs['vm_file'],
+        hex_file=filepaths['hex'])
+
+    results[filepaths['script.pa3']] = gen_test_script(
+        version='pa3',
         inputs=test['inputs'],
         outputs=test['outputs'],
         entrypoint=test['entrypoint'],
         iterations=test['steps'] + 4,
-        hex_file=filepaths['hex'],
-        run_cmd='setpc {entrypoint}\nrun {iterations}')
-    write_file(filepaths['script'], results[filepaths['script']])
+        hex_file=filepaths['hex'])
 
-    results[filepaths['script.old']] = gen_test_script(
+    results[filepaths['script.pa1']] = gen_test_script(
+        version='pa1',
         inputs=test['inputs'],
         outputs=test['outputs'],
         entrypoint=test['entrypoint'],
         iterations=test['steps'],
-        hex_file=filepaths['hex'],
-        run_cmd='run {entrypoint} {iterations}')
-    write_file(filepaths['script.old'], results[filepaths['script.old']])
+        hex_file=filepaths['hex'])
+
+    write_file(filepaths['script.pa4'], results[filepaths['script.pa4']])
+    write_file(filepaths['script.pa3'], results[filepaths['script.pa3']])
+    write_file(filepaths['script.pa1'], results[filepaths['script.pa1']])
 
     results[filepaths['expected.txt']] = gen_test_output(
         outputs=test['outputs'],
@@ -362,4 +398,4 @@ def generate_asm_tests (src_dir='tests', gen_dir='generated', verbose = False, n
             raise err
 
 if __name__ == '__main__':
-    generate_asm_tests(nthreads=32)
+    generate_asm_tests(nthreads=32, vm_entrypoint=0, vm_file='vm_pages.hex')
