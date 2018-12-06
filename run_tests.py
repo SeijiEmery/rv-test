@@ -20,7 +20,7 @@ def run_interactively (program_name, risc_v_exe, src_dir_path):
     print(cmd)
     subprocess.call(cmd, shell=True, stdout=sys.stdout, stderr=sys.stderr)
 
-def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', verbose_test_output = False, using_old_framework=False, **kwargs):
+def run_test (risc_v_executable, version, dir = 'generated', results_dir = 'results', verbose_test_output = False, using_old_framework=False, **kwargs):
     def run (test):
         with open(os.path.join(dir, test + '.expected.txt'), 'r') as f:
             expected = f.read()
@@ -28,10 +28,7 @@ def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', ver
         srcpath, expected = expected[0], '\n'.join(expected[1:])
 
         print("\033[36mRunning test: '%s' %s\033[0m"%(test, srcpath))
-        if using_old_framework:
-            script_path = os.path.join(dir, test+'.script.old')
-        else:
-            script_path = os.path.join(dir, test+'.script')
+        script_path = os.path.join(dir, test+'.script.'+version)
         with open(script_path, 'rb') as input_file:
             input_script = input_file.read()
         try:
@@ -244,7 +241,9 @@ def display_cli_help():
 
 def main (**kwargs):
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'hjiA:OLv', ['help', 'old', 'nogen', 'clean', 'rebuild', 'strict', 'interactive=', 'as=', 'objcopy=', 'ld=', 'verbose=', 'parallel=', 'filter='])
+        opts, args = getopt.getopt(sys.argv[1:], 'hjiA:OLv', [
+            'help', 'old', 'nogen', 'clean', 'rebuild', 'strict', 'interactive=', 'as=', 
+            'objcopy=', 'ld=', 'verbose=', 'parallel=', 'filter=', 'pa4', 'pa3', 'pa2', 'pa1'])
         for opt, arg in opts:
             if opt in ('-i', '--interactive'):
                 run_interactively(sys.argv[0], args[0], 'tests')
@@ -276,6 +275,14 @@ def main (**kwargs):
                 sys.exit(0)
             elif opt in ('--rebuild',):
                 clean_generated_files()
+            elif opt in ('--pa4',):
+                kwargs['version'] = 'pa4'
+            elif opt in ('--pa3',):
+                kwargs['version'] = 'pa3'
+            elif opt in ('--pa2',):
+                kwargs['version'] = 'pa2'
+            elif opt in ('--pa1',):
+                kwargs['version'] = 'pa1'
         run(args if len(args) > 0 else None, **kwargs)
         sys.exit(0)
     except getopt.GetoptError:
@@ -283,4 +290,4 @@ def main (**kwargs):
         sys.exit(-1)
 
 if __name__ == '__main__':
-    main()
+    main(version='pa4', vm_entrypoint=0, vm_file='vm_pages.hex')
