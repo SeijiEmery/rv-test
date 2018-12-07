@@ -118,13 +118,14 @@ def gen_test_asm (asm):
         'ebreak'
     )
 
-def gen_test_script (inputs, outputs, entrypoint, iterations, hex_file, version, vm_entrypoint=None, vm_file=None):
+def gen_test_script (inputs, outputs, entrypoint, iterations, hex_file, version, vm_entrypoint=None, page_table_address=None, page_table_file=None):
     if version == 'pa4':
         script = unindent('''
-            load /x {vm_entrypoint} {vm_file}
+            load /x {page_table_address} {page_table_file}
             load /x {entrypoint} {hex_file}
-            setptbr {vm_entrypoint}
-            setpc {entrypoint}
+            load /x {vm_entrypoint} {hex_file}
+            setptbr {page_table_address}
+            setpc {vm_entrypoint}
             {register_writes}
             run {iterations}
             getcycles
@@ -150,7 +151,8 @@ def gen_test_script (inputs, outputs, entrypoint, iterations, hex_file, version,
         entrypoint=entrypoint,
         hex_file=hex_file,
         vm_entrypoint=vm_entrypoint,
-        vm_file=vm_file,
+        page_table_file=page_table_file,
+        page_table_address=page_table_address,
         iterations=iterations,
         register_writes='\n'.join([
             'writereg %d %d'%(REGISTER_MAPPINGS[reg], value)
@@ -263,10 +265,11 @@ def generate_files_for_test (args):
         version='pa4',
         inputs=test['inputs'],
         outputs=test['outputs'],
-        entrypoint=test['entrypoint'] + kwargs['pc_real_address_0'],
+        entrypoint=kwargs['phys_entrypoint'],
         iterations=test['steps'] + 4,
         vm_entrypoint=kwargs['vm_entrypoint'],
-        vm_file=kwargs['vm_file'],
+        page_table_file=kwargs['page_table_file'],
+        page_table_address=kwargs['page_table_address'],
         hex_file=filepaths['hex'])
 
     results[filepaths['script.pa3']] = gen_test_script(
@@ -398,4 +401,4 @@ def generate_asm_tests (src_dir='tests', gen_dir='generated', verbose = False, n
             raise err
 
 if __name__ == '__main__':
-    generate_asm_tests(nthreads=32, vm_entrypoint=0, vm_file='vm_pages.hex')
+    generate_asm_tests(nthreads=32, vm_entrypoint=0, page_table_file='page_tables/page_table.hex')

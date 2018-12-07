@@ -293,4 +293,4 @@ def main (**kwargs):
         sys.exit(-1)
 
 if __name__ == '__main__':
-    main(version='pa4', vm_entrypoint=0, pc_real_address_0=4*1024*1024, vm_file='page_tables/page_table.hex')
+    main(version='pa4', vm_entrypoint=0x400000, phys_entrypoint=0x100000, page_table_file='page_tables/page_table.hex', page_table_address=0x0)
