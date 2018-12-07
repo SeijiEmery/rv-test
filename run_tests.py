@@ -81,6 +81,9 @@ def run_test (risc_v_executable, version, dir = 'generated', results_dir = 'resu
             elif reg == 'pc':
                 expected_pc = int(value, 0)
 
+        if version == 'pa4':
+            expected_pc = None
+
         test_ok = True
         for match in re.finditer(r'R(\d+)\s*=\s*(-?\d+[xX]?\d*)', output):
             reg, value = match.group(1, 2)

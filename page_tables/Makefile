@@ -15,7 +15,7 @@ default: all
 all: $(HEX_TABLE)
 
 $(HEX_TABLE): $(PAGE_TABLE)
-	od -t x1 $^ --output-duplicates > $@
+	od -t x1 -v $^ > $@
 
 $(PAGE_TABLE): $(GENERATOR) $(TABLE_SPEC)
 	$(GENERATOR) 0 $(TABLE_SPEC) > $@
