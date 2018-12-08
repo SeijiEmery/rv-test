@@ -2,6 +2,7 @@
 generated/*.o
 generated/*.bin
 generated/*.lastrun.txt
+generated/*.last_debug.txt
 results/*
 
 /page_tables/page_table.bin
