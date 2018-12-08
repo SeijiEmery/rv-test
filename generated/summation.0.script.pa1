@@ -1,0 +1,6 @@
+load /x 0 generated/summation.0.hex
+setpc 0
+writereg 10 1000
+run 100000
+readreg 10
+readreg 8

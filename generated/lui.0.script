@@ -1,5 +1,0 @@
-load /x 0 generated/lui.0.hex
-
-setpc 0
-run 5
-readreg 11

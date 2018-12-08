@@ -1,2 +1,2 @@
-tests/mul.test.s:79
+tests/mul.test.s:80
 

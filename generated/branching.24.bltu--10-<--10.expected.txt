@@ -1,2 +1,2 @@
-tests/branching.test.s:242
+tests/branching.test.s:244
 R6 = 0

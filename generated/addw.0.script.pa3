@@ -1,0 +1,15 @@
+load /x 0 generated/addw.0.hex
+setpc 0
+writereg 11 4294967295
+writereg 12 4294967295
+writereg 13 0
+writereg 14 0
+run 100004
+readreg 11
+readreg 12
+readreg 13
+readreg 14
+readreg 9
+readreg 18
+readreg 19
+readreg 20

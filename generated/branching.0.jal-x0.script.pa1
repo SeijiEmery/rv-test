@@ -1,0 +1,6 @@
+load /x 0 generated/branching.0.jal-x0.hex
+setpc 0
+writereg 6 22
+run 100000
+readreg 0
+readreg 6

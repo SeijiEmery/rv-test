@@ -1,0 +1,8 @@
+load /x 0 generated/add_cascade.0.cascade-addition.hex
+setpc 0
+writereg 10 3
+writereg 11 4
+writereg 12 5
+writereg 13 6
+run 100004
+readreg 14

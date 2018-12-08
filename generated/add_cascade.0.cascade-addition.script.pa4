@@ -1,0 +1,13 @@
+load /x 0 page_tables/page_table.hex
+load /x 1048576 generated/add_cascade.0.cascade-addition.hex
+load /x 4194304 generated/add_cascade.0.cascade-addition.hex
+setptbr 0
+setpc 4194304
+writereg 10 3
+writereg 11 4
+writereg 12 5
+writereg 13 6
+run 100004
+getcycles
+memorystats
+readreg 14

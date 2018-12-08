@@ -1,0 +1,4 @@
+load /x 0 generated/mul.6.divw-remw.hex
+setpc 0
+
+run 100004

@@ -1,0 +1,6 @@
+load /x 0 generated/lui.1.hex
+setpc 0
+
+run 100004
+readreg 11
+readreg 12

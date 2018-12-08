@@ -1,0 +1,10 @@
+load /x 0 page_tables/page_table.hex
+load /x 1048576 generated/sra.2.srai-test-2.hex
+load /x 4194304 generated/sra.2.srai-test-2.hex
+setptbr 0
+setpc 4194304
+writereg 1 9223372036854775808
+run 100004
+getcycles
+memorystats
+readreg 1

@@ -1,7 +1,0 @@
-load /x 65444 generated/lui.3.hex
-writereg -1 65444
-writereg 11 0
-setpc 65444
-run 6
-readreg -1
-readreg 11

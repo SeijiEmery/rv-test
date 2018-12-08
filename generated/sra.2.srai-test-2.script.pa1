@@ -1,0 +1,5 @@
+load /x 0 generated/sra.2.srai-test-2.hex
+setpc 0
+writereg 1 9223372036854775808
+run 100000
+readreg 1

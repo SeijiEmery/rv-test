@@ -1,0 +1,9 @@
+load /x 0 generated/branching.12.bgeu-10->=-10.hex
+setpc 0
+writereg 10 10
+writereg 11 10
+writereg 6 1
+run 100004
+readreg 10
+readreg 11
+readreg 6

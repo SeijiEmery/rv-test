@@ -1,3 +1,3 @@
-tests/branching.test.s:106
+tests/branching.test.s:108
 R10 = 10
 R6 = 1

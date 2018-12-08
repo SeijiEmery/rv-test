@@ -1,4 +1,4 @@
-tests/branching.test.s:188
+tests/branching.test.s:190
 R10 = 10
 R11 = 9
 R6 = 0

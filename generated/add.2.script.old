@@ -1,4 +1,0 @@
-load /x 0 generated/add.2.hex
-
-run 0 1000
-readreg 0

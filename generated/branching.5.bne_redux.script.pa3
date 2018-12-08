@@ -1,0 +1,9 @@
+load /x 0 generated/branching.5.bne_redux.hex
+setpc 0
+writereg 10 -10
+writereg 12 -20
+writereg 28 103
+run 100004
+readreg 10
+readreg 12
+readreg 28

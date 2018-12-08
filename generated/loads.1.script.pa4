@@ -1,0 +1,17 @@
+load /x 0 page_tables/page_table.hex
+load /x 1048576 generated/loads.1.hex
+load /x 4194304 generated/loads.1.hex
+setptbr 0
+setpc 4194304
+writereg 10 10
+writereg 3 6291456
+run 100004
+getcycles
+memorystats
+readreg 11
+readreg 12
+readreg 13
+readreg 14
+readreg 15
+readreg 16
+readreg 17

@@ -1,0 +1,28 @@
+load /x 0 page_tables/page_table.hex
+load /x 1048576 generated/sra.3.srai-test-3.hex
+load /x 4194304 generated/sra.3.srai-test-3.hex
+setptbr 0
+setpc 4194304
+writereg 1 1
+writereg 2 2
+writereg 3 3
+writereg 4 4
+writereg 5 5
+writereg 6 6
+writereg 7 7
+writereg 8 8
+writereg 9 9
+writereg 10 10
+run 100004
+getcycles
+memorystats
+readreg 1
+readreg 2
+readreg 3
+readreg 4
+readreg 5
+readreg 6
+readreg 7
+readreg 8
+readreg 9
+readreg 10

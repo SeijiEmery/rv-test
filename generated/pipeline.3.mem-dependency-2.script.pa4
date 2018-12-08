@@ -1,0 +1,18 @@
+load /x 0 page_tables/page_table.hex
+load /x 1048576 generated/pipeline.3.mem-dependency-2.hex
+load /x 4194304 generated/pipeline.3.mem-dependency-2.hex
+setptbr 0
+setpc 4194304
+writereg 8 6291456
+writereg 9 6291456
+writereg 18 0
+writereg 19 69
+writereg 20 0
+run 100004
+getcycles
+memorystats
+readreg 8
+readreg 9
+readreg 18
+readreg 19
+readreg 20

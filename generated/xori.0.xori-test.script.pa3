@@ -1,0 +1,13 @@
+load /x 0 generated/xori.0.xori-test.hex
+setpc 0
+writereg 3 0
+writereg 4 0
+writereg 5 1
+writereg 7 1050
+writereg 9 0
+run 100004
+readreg 3
+readreg 4
+readreg 5
+readreg 7
+readreg 9

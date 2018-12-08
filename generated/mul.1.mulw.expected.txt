@@ -1,4 +1,4 @@
-tests/mul.test.s:22
+tests/mul.test.s:23
 R5 = -1
 R6 = 1
 R7 = 48272770088149793

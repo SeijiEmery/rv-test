@@ -1,4 +1,4 @@
-tests/store.test.s:44
+tests/store.test.s:42
 R10 = 4099
 R11 = 4099
 R12 = 4099

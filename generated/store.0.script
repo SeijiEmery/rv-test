@@ -1,9 +1,0 @@
-load /x 0 generated/store.0.hex
-writereg 10 16045690984833335023
-setpc 0
-run 1004
-readreg 10
-readreg 11
-readreg 12
-readreg 13
-readreg 14

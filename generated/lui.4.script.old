@@ -1,7 +1,0 @@
-load /x 72 generated/lui.4.hex
-writereg -1 72
-writereg 11 0
-run 72 3
-readreg -1
-readreg 11
-readreg 12

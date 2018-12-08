@@ -1,0 +1,15 @@
+load /x 0 generated/register_read_write.0.hex
+setpc 0
+writereg 0 297
+writereg 1 22
+writereg 3 44
+writereg 5 99
+writereg 31 22
+writereg 15 18446744073709534959
+run 100000
+readreg 0
+readreg 1
+readreg 3
+readreg 5
+readreg 31
+readreg 15

@@ -1,0 +1,20 @@
+load /x 0 page_tables/page_table.hex
+load /x 1048576 generated/branching.26.fib-bgt.hex
+load /x 4194304 generated/branching.26.fib-bgt.hex
+setptbr 0
+setpc 4194304
+writereg 8 0
+writereg 9 1
+writereg 18 2
+writereg 19 3
+writereg 20 4
+writereg 21 5
+run 100004
+getcycles
+memorystats
+readreg 8
+readreg 9
+readreg 18
+readreg 19
+readreg 20
+readreg 21

@@ -1,0 +1,10 @@
+load /x 0 generated/store.1.hex
+setpc 0
+writereg 10 255
+writereg 6 6291456
+run 100004
+readreg 10
+readreg 11
+readreg 12
+readreg 13
+readreg 14

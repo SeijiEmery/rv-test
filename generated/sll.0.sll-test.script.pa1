@@ -1,0 +1,11 @@
+load /x 0 generated/sll.0.sll-test.hex
+setpc 0
+writereg 1 1
+writereg 2 2
+writereg 3 0
+writereg 4 31
+run 100000
+readreg 1
+readreg 2
+readreg 3
+readreg 4

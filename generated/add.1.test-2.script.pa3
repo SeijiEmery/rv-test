@@ -1,0 +1,7 @@
+load /x 0 generated/add.1.test-2.hex
+setpc 0
+writereg 1 10
+writereg 2 10
+run 100004
+readreg 1
+readreg 2

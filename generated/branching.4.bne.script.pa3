@@ -1,0 +1,18 @@
+load /x 0 generated/branching.4.bne.hex
+setpc 0
+writereg 10 -10
+writereg 11 -10
+writereg 12 -20
+writereg 13 10
+writereg 14 20
+writereg 6 101
+writereg 7 102
+writereg 28 103
+writereg 29 104
+run 100004
+readreg 13
+readreg 14
+readreg 6
+readreg 7
+readreg 28
+readreg 29

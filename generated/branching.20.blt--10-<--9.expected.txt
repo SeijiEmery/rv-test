@@ -1,2 +1,2 @@
-tests/branching.test.s:206
+tests/branching.test.s:208
 R6 = 1

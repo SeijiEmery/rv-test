@@ -1,0 +1,18 @@
+load /x 0 page_tables/page_table.hex
+load /x 1048576 generated/xori.0.xori-test.hex
+load /x 4194304 generated/xori.0.xori-test.hex
+setptbr 0
+setpc 4194304
+writereg 3 0
+writereg 4 0
+writereg 5 1
+writereg 7 1050
+writereg 9 0
+run 100004
+getcycles
+memorystats
+readreg 3
+readreg 4
+readreg 5
+readreg 7
+readreg 9

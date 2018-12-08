@@ -1,8 +1,0 @@
-load /x 0 generated/pipeline.0.alu-dependency-1.hex
-writereg 8 0
-writereg 9 50
-writereg 18 0
-run 0 1000
-readreg 8
-readreg 9
-readreg 18

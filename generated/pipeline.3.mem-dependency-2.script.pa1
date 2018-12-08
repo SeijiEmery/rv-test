@@ -1,0 +1,13 @@
+load /x 0 generated/pipeline.3.mem-dependency-2.hex
+setpc 0
+writereg 8 6291456
+writereg 9 6291456
+writereg 18 0
+writereg 19 69
+writereg 20 0
+run 100000
+readreg 8
+readreg 9
+readreg 18
+readreg 19
+readreg 20

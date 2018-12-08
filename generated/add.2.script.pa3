@@ -1,0 +1,5 @@
+load /x 0 generated/add.2.hex
+setpc 0
+
+run 100004
+readreg 0

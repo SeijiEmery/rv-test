@@ -1,4 +1,4 @@
-tests/loads.test.s:39
+tests/loads.test.s:37
 R11 = -7
 R12 = 4294967289
 R13 = 65529

@@ -1,5 +1,4 @@
-add gp, zero, zero
-    sd a0,  0(gp)
+sd a0,  0(gp)
     ld a1,  0(gp)
     lwu a2, 0(gp)
     lhu a3, 0(gp)

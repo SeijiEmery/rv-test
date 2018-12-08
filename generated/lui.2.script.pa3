@@ -1,0 +1,7 @@
+load /x 65444 generated/lui.2.hex
+setpc 65444
+writereg -1 65444
+writereg 11 0
+run 100004
+readreg -1
+readreg 11

@@ -1,0 +1,9 @@
+load /x 0 generated/slli.1.slli-test-2.hex
+setpc 0
+writereg 1 7
+writereg 2 1
+writereg 3 1024
+run 100004
+readreg 1
+readreg 2
+readreg 3

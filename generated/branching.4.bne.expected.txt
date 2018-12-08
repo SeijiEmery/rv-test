@@ -1,4 +1,4 @@
-tests/branching.test.s:50
+tests/branching.test.s:52
 R13 = 10
 R14 = 20
 R6 = 11

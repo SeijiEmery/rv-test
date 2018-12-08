@@ -1,0 +1,20 @@
+load /x 0 page_tables/page_table.hex
+load /x 1048576 generated/register_read_write.0.hex
+load /x 4194304 generated/register_read_write.0.hex
+setptbr 0
+setpc 4194304
+writereg 0 297
+writereg 1 22
+writereg 3 44
+writereg 5 99
+writereg 31 22
+writereg 15 18446744073709534959
+run 100004
+getcycles
+memorystats
+readreg 0
+readreg 1
+readreg 3
+readreg 5
+readreg 31
+readreg 15

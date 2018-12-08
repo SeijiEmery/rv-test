@@ -1,3 +1,3 @@
-tests/lui.test.s:22
-pc = 65448
+tests/lui.test.s:23
+pc = 65464
 R11 = 18446744073429688320

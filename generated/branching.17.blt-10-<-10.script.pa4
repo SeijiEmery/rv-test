@@ -1,0 +1,14 @@
+load /x 0 page_tables/page_table.hex
+load /x 1048576 generated/branching.17.blt-10-<-10.hex
+load /x 4194304 generated/branching.17.blt-10-<-10.hex
+setptbr 0
+setpc 4194304
+writereg 10 10
+writereg 11 10
+writereg 6 1
+run 100004
+getcycles
+memorystats
+readreg 10
+readreg 11
+readreg 6

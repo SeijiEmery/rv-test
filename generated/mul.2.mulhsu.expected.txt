@@ -1,2 +1,2 @@
-tests/mul.test.s:40
+tests/mul.test.s:41
 

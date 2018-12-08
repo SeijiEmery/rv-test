@@ -1,0 +1,12 @@
+load /x 0 generated/loads.2.hex
+setpc 0
+writereg 10 -7
+writereg 3 6291456
+run 100000
+readreg 11
+readreg 12
+readreg 13
+readreg 14
+readreg 15
+readreg 16
+readreg 17

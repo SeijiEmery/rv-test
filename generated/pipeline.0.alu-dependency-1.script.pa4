@@ -1,0 +1,14 @@
+load /x 0 page_tables/page_table.hex
+load /x 1048576 generated/pipeline.0.alu-dependency-1.hex
+load /x 4194304 generated/pipeline.0.alu-dependency-1.hex
+setptbr 0
+setpc 4194304
+writereg 8 0
+writereg 9 50
+writereg 18 0
+run 100004
+getcycles
+memorystats
+readreg 8
+readreg 9
+readreg 18

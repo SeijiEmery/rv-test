@@ -1,0 +1,21 @@
+load /x 0 generated/sltu.0.sltu.hex
+setpc 0
+writereg 2 1
+writereg 3 0
+writereg 4 12
+writereg 5 -20
+writereg 6 -1
+writereg 7 -200
+writereg 8 0
+writereg 9 -10
+writereg 10 18
+writereg 11 -1
+writereg 12 1000
+writereg 13 -400
+run 100004
+readreg 2
+readreg 3
+readreg 4
+readreg 5
+readreg 6
+readreg 7

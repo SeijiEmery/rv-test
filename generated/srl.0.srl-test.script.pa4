@@ -1,0 +1,20 @@
+load /x 0 page_tables/page_table.hex
+load /x 1048576 generated/srl.0.srl-test.hex
+load /x 4194304 generated/srl.0.srl-test.hex
+setptbr 0
+setpc 4194304
+writereg 1 1
+writereg 2 0
+writereg 3 31
+writereg 4 64
+writereg 5 62
+writereg 6 1152921504606846976
+run 100004
+getcycles
+memorystats
+readreg 1
+readreg 2
+readreg 3
+readreg 4
+readreg 5
+readreg 6

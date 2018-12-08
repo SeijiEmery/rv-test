@@ -1,0 +1,4 @@
+load /x 0 generated/mul.5.divu-remu.hex
+setpc 0
+
+run 100004

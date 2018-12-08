@@ -1,0 +1,9 @@
+load /x 0 page_tables/page_table.hex
+load /x 1048576 generated/mul.5.divu-remu.hex
+load /x 4194304 generated/mul.5.divu-remu.hex
+setptbr 0
+setpc 4194304
+
+run 100004
+getcycles
+memorystats
