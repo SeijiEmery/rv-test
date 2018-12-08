@@ -20,23 +20,32 @@ def run_interactively (program_name, risc_v_exe, src_dir_path):
     print(cmd)
     subprocess.call(cmd, shell=True, stdout=sys.stdout, stderr=sys.stderr)
 
-def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', verbose_test_output = False, using_old_framework=False, **kwargs):
+def run_test (risc_v_executable, version, dir = 'generated', results_dir = 'results', verbose_test_output = False, using_old_framework=False, readlatency=None, writelatency=None, **kwargs):
     def run (test):
         with open(os.path.join(dir, test + '.expected.txt'), 'r') as f:
             expected = f.read()
         expected = expected.split('\n')
         srcpath, expected = expected[0], '\n'.join(expected[1:])
 
+        # print([ risc_v_executable[0] ])
+
+        command_args = list(risc_v_executable)
+        if writelatency: 
+            command_args.append('-w')
+            command_args.append(str(writelatency))
+        if readlatency:  
+            command_args.append('-r')
+            command_args.append(str(readlatency))
+        cmd = ' '.join(list(command_args))
+        print(cmd)
+
         print("\033[36mRunning test: '%s' %s\033[0m"%(test, srcpath))
-        if using_old_framework:
-            script_path = os.path.join(dir, test+'.script.old')
-        else:
-            script_path = os.path.join(dir, test+'.script')
+        script_path = os.path.join(dir, test+'.script.'+version)
         with open(script_path, 'rb') as input_file:
             input_script = input_file.read()
         try:
             result = subprocess.run(
-                risc_v_executable, 
+                command_args,
                 input=input_script,
                 capture_output = True
             )
@@ -52,7 +61,8 @@ def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', ver
             outfile = open(os.path.join(dir, test + '.lastrun.txt'), 'w+')
             errfile = open(os.path.join(dir, test + '.last_debug.txt'), 'w+')
             p = subprocess.Popen(
-                risc_v_executable,
+                command_args,
+                shell=False,
                 stdin=infile,
                 stdout=outfile,
                 stderr=errfile)
@@ -83,6 +93,9 @@ def run_test (risc_v_executable, dir = 'generated', results_dir = 'results', ver
                 expected_values[REGISTER_TO_STR[int(reg[1:])]] = int(value, 0)
             elif reg == 'pc':
                 expected_pc = int(value, 0)
+
+        if version == 'pa4':
+            expected_pc = None
 
         test_ok = True
         for match in re.finditer(r'R(\d+)\s*=\s*(-?\d+[xX]?\d*)', output):
@@ -190,6 +203,9 @@ def run_tests (risc_v_executable, test_filters = None, dir = 'generated', result
 
 
 def run (risc_v_exe, generate=True, rebuild = True, **kwargs):
+    if subprocess.call(['make', '-C', 'page_tables']) != 0:
+        sys.exit(1)
+
     if generate:
         generate_asm_tests(
             src_dir='tests', 
@@ -231,6 +247,13 @@ def display_cli_help():
             -j, --parallel  sets the # of work threads (processes) used in part of rv-test
                             usage: -j=1  (disable multiprocessing)
                                    -j=32 (run w/ 32 workers) 
+
+            -r, --readlatency   sets read latency for pa4
+            -w, --writelatency  sets write latency for pa4
+
+            --pa1           run with pa1 semantics (no pipelining)
+            --pa3           run with pa3 semantics (pipelining + caches)
+            --pa4           run with pa4 semantics (pipelining, caches, and virtual memory)
     
             --old           runs with .old.script input files instead of .script files
                             this is just so you can run the original version of miller's framework
@@ -244,7 +267,9 @@ def display_cli_help():
 
 def main (**kwargs):
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'hjiA:OLv', ['help', 'old', 'nogen', 'clean', 'rebuild', 'strict', 'interactive=', 'as=', 'objcopy=', 'ld=', 'verbose=', 'parallel=', 'filter='])
+        opts, args = getopt.getopt(sys.argv[1:], 'hjiA:OLv', [
+            'help', 'old', 'nogen', 'clean', 'rebuild', 'strict', 'interactive=', 'as=', 
+            'objcopy=', 'ld=', 'verbose=', 'parallel=', 'filter=', 'writelatency=', 'readlatency=', 'pa4', 'pa3', 'pa2', 'pa1'])
         for opt, arg in opts:
             if opt in ('-i', '--interactive'):
                 run_interactively(sys.argv[0], args[0], 'tests')
@@ -276,6 +301,18 @@ def main (**kwargs):
                 sys.exit(0)
             elif opt in ('--rebuild',):
                 clean_generated_files()
+            elif opt in ('--pa4',):
+                kwargs['version'] = 'pa4'
+            elif opt in ('--pa3',):
+                kwargs['version'] = 'pa3'
+            elif opt in ('--pa2',):
+                kwargs['version'] = 'pa2'
+            elif opt in ('--pa1',):
+                kwargs['version'] = 'pa1'
+            elif opt in ('-r','--writelatency'):
+                kwargs['writelatency'] = int(arg)
+            elif opt in ('-r','--readlatency'):
+                kwargs['readlatency'] = int(arg)
         run(args if len(args) > 0 else None, **kwargs)
         sys.exit(0)
     except getopt.GetoptError:
@@ -283,4 +320,4 @@ def main (**kwargs):
         sys.exit(-1)
 
 if __name__ == '__main__':
-    main()
+    main(version='pa4', vm_entrypoint=0x400000, phys_entrypoint=0x100000, page_table_file='page_tables/page_table.hex', page_table_address=0x0)

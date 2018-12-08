@@ -6,7 +6,7 @@ test "mul mulh" {{
     }}
     outputs {{
         t0 -1 t1 1 t2 0xab7fd4216da321 t3 0xab7fd4216da321 t4 1
-        s0 0  s1 0 s2 0x3df0fe94310f   s3 0x3df0fe94310f   s4 0xfffffffffffffffe
+        s0 0  s1 0 s2 0x3df0fe94310f   s3 0x3df0fe94310f   s4 0
     }}
     mul  t0, a0, s0
     mulh s0, a0, s0
@@ -19,6 +19,7 @@ test "mul mulh" {{
     mul  t4, a4, s4
     mulh s4, a4, s4
 }}
+
 test "mulw" {{
     inputs {{
         a0  1 a1 -1 a2 0x7decafdeadbeef a3 -0x7decafdeadbeef

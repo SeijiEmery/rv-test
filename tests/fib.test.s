@@ -1,7 +1,7 @@
 
 test {{
-    inputs  {{ sp 4096 a0 10 }}
-    outputs {{ sp 4096 a0 55 }}
+    inputs  {{ sp 0x601000 a0 10 }}
+    outputs {{ sp 0x601000 a0 55 }}
 
     jal     ra, fib
     j       end

@@ -1,0 +1,6 @@
+
+# our code section is 1 MiB into main memory
+0x400000	0x100000
+
+# data section is mapped 1 MiB later
+0x600000	0x200000

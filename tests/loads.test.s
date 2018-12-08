@@ -1,6 +1,6 @@
 
 test {{
-    inputs  {{ a0 0xdeadbeefdeadbeef }}
+    inputs  {{ a0 16045690984833335023 gp 0x600000 }}
     outputs {{ 
         a0 0xdeadbeefdeadbeef 
         a1 0xdeadbeefdeadbeef
@@ -11,7 +11,6 @@ test {{
         a6 18446744073709534959
         a7 18446744073709551599
     }}
-    addi gp, zero, 200
     sd a0,  0(gp)
     ld a1,  0(gp)
     lwu a2, 0(gp)
@@ -23,9 +22,8 @@ test {{
 }}
 
 test {{
-    inputs  {{ a0 10 }}
+    inputs  {{ a0 10 gp 0x600000 }}
     outputs {{ a1 10 a2 10 a3 10 a4 10 a5 10 a6 10 a7 10 }}
-    add gp, zero, zero
     sd a0,  0(gp)
     ld a1,  0(gp)
     lwu a2, 0(gp)
@@ -37,9 +35,8 @@ test {{
 }}
 
 test {{
-    inputs  {{ a0 -7 }}
+    inputs  {{ a0 -7 gp 0x600000 }}
     outputs {{ a1 -7 a2 4294967289 a3 65529 a4 249 a5 18446744073709551609 a6 18446744073709551609 a7 18446744073709551609 }}
-    add gp, zero, zero
     sd a0,  0(gp)
     ld a1,  0(gp)
     lwu a2, 0(gp)

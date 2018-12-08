@@ -72,7 +72,7 @@ Assembly for each test case is written into a separate files in the `generated/`
 
 "Script" files are also generated, which are just input commands piped into your riscv executable, and a shell file is generated, `generated/run.sh` that runs + diffs all this stuff, with testrun outputs written to `results/`.
 
-Lastly, the `run_tests.py` script checks all diffs and prints out which test cases passed (no diff) / failed (diff between the output and a generated .expected file). Currently this last part is TBD.
+Diffs are then checked and passing / failing tests are then summarized.
 
 ## Dependencies
 

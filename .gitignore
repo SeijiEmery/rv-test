@@ -3,3 +3,7 @@ generated/*.o
 generated/*.bin
 generated/*.lastrun.txt
 results/*
+
+/page_tables/page_table.bin
+/page_tables/page_table.hex
+/page_tables/generate_page_table

@@ -20,8 +20,8 @@ test "alu-dependency-2" {{
 }}
 
 test "mem-dependency-1" {{ 
-	inputs {{ s0 1000 s1 2048 s2 0 s3 0 }}
-	outputs {{ s0 1000 s1 2048 s2 1000 s3 2000 }}
+	inputs {{ s0 1000 s1 0x600000 s2 0 s3 0 }}
+	outputs {{ s0 1000 s1 0x600000 s2 1000 s3 2000 }}
 
 	sd s0, 0(s1)
 	ld s2, 0(s1)
@@ -30,8 +30,8 @@ test "mem-dependency-1" {{
 }}
 
 test "mem-dependency-2" {{ 
-	inputs {{ s0 2048 s1 2048 s2 0 s3 69 s4 0 }}
-	outputs {{ s0 2048 s1 2048 s2 2048 s3 69 s4 69 }}
+	inputs {{ s0 0x600000 s1 0x600000 s2 0 s3 69 s4 0 }}
+	outputs {{ s0 0x600000 s1 0x600000 s2 0x600000 s3 69 s4 69 }}
 
 	sd s0, 0(s1)
 	ld s2, 0(s1)
@@ -41,8 +41,8 @@ test "mem-dependency-2" {{
 }}
 
 test "alu-mem-dependency-1" {{ 
-	inputs {{ s0 420 s1 3072 s2 0 s3 69  s4 0 }}
-	outputs {{ s0 420 s1 3072 s2 420 s3 69 s4 489 }}
+	inputs {{ s0 420 s1 0x600000 s2 0 s3 69  s4 0 }}
+	outputs {{ s0 420 s1 0x600000 s2 420 s3 69 s4 489 }}
 
 	sd s0, 0(s1)
 	ld s2, 0(s1)
